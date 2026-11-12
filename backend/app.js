@@ -12,12 +12,19 @@ import { errorHandler, notFound } from "./middleware/errors.js";
 import { securityHeaders } from "./middleware/security.js";
 const app = express();
 app.disable("x-powered-by");
-const allowedOrigins = new Set((process.env.CLIENT_ORIGIN || "http://localhost:5173").split(",").map(value => value.trim()).filter(Boolean));
+const allowedOrigins = new Set(
+  (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+    .split(",")
+    .map((value) => value.trim().replace(/\/+$/, ""))
+    .filter(Boolean),
+);
 app.use(securityHeaders);
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+      if (!origin) return callback(null, true);
+      const normalized = origin.trim().replace(/\/+$/, "");
+      if (allowedOrigins.has(normalized)) return callback(null, true);
       return callback(new Error("CORS origin is not allowed."));
     },
     credentials: true,
