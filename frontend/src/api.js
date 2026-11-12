@@ -1,4 +1,9 @@
-const API_URL=import.meta.env.VITE_API_URL||'/api';
+// Use the local Vite proxy during development and the deployed Render API in production.
+const API_URL=import.meta.env.VITE_API_URL||(
+  import.meta.env.PROD
+    ? 'https://nexbrief-n6bu.onrender.com/api'
+    : '/api'
+);
 const tokenKey='nexbrief_access_token';
 export const authToken={get:()=>localStorage.getItem(tokenKey),set:token=>localStorage.setItem(tokenKey,token),clear:()=>localStorage.removeItem(tokenKey)};
 let refreshPromise;
