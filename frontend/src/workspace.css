@@ -345,3 +345,256 @@ body:has(.workspace){min-width:320px!important;overflow:hidden;background:#f8f8f
 @media(max-width:520px){.ws-top-search{display:none}.ws-crumb>span:first-child,.ws-crumb-slash{display:none}.ws-page{padding:24px 16px}.ws-heading{gap:15px}.ws-heading-actions{width:100%;justify-content:flex-start}.ws-heading-period{display:block;margin-top:5px}.ws-nav-item{font-size:13px}.ws-icon-rail{gap:2px}.ws-rail-button{flex-basis:32px;width:32px}.ws-rail-bottom .ws-rail-avatar{display:none}}
 @media(max-width:520px){.ws-preview-banner{align-items:flex-start;flex-direction:column;gap:8px;margin-bottom:18px}.ws-preview-banner>a{flex:0 1 auto}}
 @media(prefers-reduced-motion:reduce){.workspace *,.workspace *::before,.workspace *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Platform Maintenance Active Modal */
+.ws-maintenance-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 18, 16, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: wsFadeIn 0.22s ease-out;
+}
+.ws-maintenance-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  padding: 2.2rem 2rem 1.8rem;
+  text-align: center;
+  animation: wsScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ws-maintenance-icon-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #b45309;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.1rem;
+}
+.ws-maintenance-kicker {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: #b45309;
+  margin-bottom: 0.4rem;
+}
+.ws-maintenance-modal h2 {
+  font-size: 1.35rem;
+  font-weight: 750;
+  color: #111827;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+.ws-maintenance-subtitle {
+  font-size: 0.88rem;
+  color: #4b5563;
+  margin: 0 0 1.25rem;
+  line-height: 1.45;
+}
+.ws-maintenance-admin-msg {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #f59e0b;
+  border-radius: 9px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  text-align: left;
+}
+.ws-maintenance-admin-msg-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.3rem;
+}
+.ws-maintenance-admin-msg p {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.5;
+}
+.ws-maintenance-countdown-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  margin-bottom: 1.4rem;
+}
+.ws-maintenance-countdown-circle {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #166534;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.ws-maintenance-countdown-circle strong {
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+.ws-maintenance-countdown-circle small {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+.ws-maintenance-countdown-text strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #166534;
+  font-weight: 650;
+  margin-bottom: 0.2rem;
+}
+.ws-maintenance-countdown-text p {
+  font-size: 0.82rem;
+  color: #15803d;
+  margin: 0;
+  line-height: 1.35;
+}
+.ws-maintenance-actions {
+  display: flex;
+  justify-content: center;
+}
+.ws-maintenance-logout-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 0.8rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 650;
+  border-radius: 9px;
+  gap: 0.5rem;
+  background: #111827;
+  color: #ffffff;
+  border: 0;
+  transition: background 0.15s ease;
+}
+.ws-maintenance-logout-btn:hover {
+  background: #000000;
+}
+@keyframes wsFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes wsScaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Member Signout Confirmation Modal */
+.ws-signout-icon-badge {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #dc2626;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.1rem;
+}
+.ws-signout-kicker {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  color: #dc2626;
+  margin-bottom: 0.4rem;
+}
+.ws-signout-countdown-box {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+.ws-signout-circle {
+  background: #dc2626;
+}
+.ws-signout-countdown-text strong {
+  color: #991b1b;
+}
+.ws-signout-countdown-text p {
+  color: #b91c1c;
+}
+.ws-signout-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.ws-signout-cancel-btn {
+  flex: 1;
+  justify-content: center;
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+  border-radius: 9px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+}
+.ws-signout-cancel-btn:hover {
+  background: #f9fafb;
+}
+.ws-signout-confirm-btn {
+  flex: 1.2;
+  justify-content: center;
+  padding: 0.8rem 1.2rem;
+  font-weight: 650;
+  border-radius: 9px;
+  background: #dc2626;
+  color: #ffffff;
+  border: 0;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ws-signout-confirm-btn:hover {
+  background: #b91c1c;
+}
+.ws-brand-inline-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.8px;
+  cursor: pointer;
+  color: inherit;
+}
+.ws-brand-inline-btn span {
+  color: #999;
+}
+.ws-footer-brand-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

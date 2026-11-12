@@ -29,7 +29,7 @@ const previewMode=previewType==='1'||previewType==='admin';
 const previewAdmin=previewType==='admin';
 
 export default function App(){
- const[page,setPage]=useState('Overview'),[railSection,setRailSection]=useState('overview'),[drawer,setDrawer]=useState(false),[user,setUser]=useState(null),[leads,setLeads]=useState([]),[proposals,setProposals]=useState([]),[activities,setActivities]=useState([]),[drafts,setDrafts]=useState([]),[selectedLead,setSelectedLead]=useState(''),[draft,setDraft]=useState(''),[draftKind,setDraftKind]=useState('outreach'),[search,setSearch]=useState(''),[dialog,setDialog]=useState(null),[toast,setToast]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false);
+ const[page,setPage]=useState('Overview'),[railSection,setRailSection]=useState('overview'),[drawer,setDrawer]=useState(false),[user,setUser]=useState(null),[leads,setLeads]=useState([]),[proposals,setProposals]=useState([]),[activities,setActivities]=useState([]),[drafts,setDrafts]=useState([]),[selectedLead,setSelectedLead]=useState(''),[draft,setDraft]=useState(''),[draftKind,setDraftKind]=useState('outreach'),[search,setSearch]=useState(''),[dialog,setDialog]=useState(null),[toast,setToast]=useState(''),[error,setError]=useState(''),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[maintenanceAlert,setMaintenanceAlert]=useState(null),[signoutConfirm,setSignoutConfirm]=useState(null);
  const currency=user?.workspace?.currency||'USD';
  const sidebarGroups=navGroups;
  const load=useCallback(async(initial=false)=>{
@@ -50,6 +50,68 @@ export default function App(){
  },[user]);
  useEffect(()=>{load(true);},[]);
  useEffect(()=>{if(!toast)return;const timeout=setTimeout(()=>setToast(''),4500);return()=>clearTimeout(timeout);},[toast]);
+ useEffect(()=>{
+  const handleMaintenance=(event)=>{
+   const msg=event?.detail?.message||'NexBrief is currently undergoing scheduled maintenance. Please check back shortly.';
+   setMaintenanceAlert(curr=>curr||{message:msg,countdown:10});
+  };
+  window.addEventListener('nexbrief:maintenance',handleMaintenance);
+  return ()=>window.removeEventListener('nexbrief:maintenance',handleMaintenance);
+ },[]);
+ useEffect(()=>{
+  if(!user||user.platformOwner||previewMode||maintenanceAlert)return;
+  let active=true;
+  const poll=async()=>{
+   try{
+    const res=await api('/status');
+    if(res?.maintenance&&active){
+     setMaintenanceAlert({message:res.notice||'NexBrief is currently undergoing scheduled maintenance. Please check back shortly.',countdown:10});
+    }
+   }catch(problem){
+    if(problem?.code==='PLATFORM_MAINTENANCE'||String(problem?.message||'').toLowerCase().includes('maintenance')){
+     if(active)setMaintenanceAlert(curr=>curr||{message:problem.message||'NexBrief is currently undergoing scheduled maintenance. Please check back shortly.',countdown:10});
+    }
+   }
+  };
+  const interval=setInterval(poll,4000);
+  return ()=>{active=false;clearInterval(interval);};
+ },[user,previewMode,maintenanceAlert]);
+ useEffect(()=>{
+  if(!maintenanceAlert)return;
+  if(maintenanceAlert.countdown<=0){
+   signOut();
+   return;
+  }
+  const timer=setTimeout(()=>{
+   setMaintenanceAlert(prev=>{
+    if(!prev)return null;
+    if(prev.countdown<=1){
+     signOut();
+     return {...prev,countdown:0};
+    }
+    return {...prev,countdown:prev.countdown-1};
+   });
+  },1000);
+  return ()=>clearTimeout(timer);
+ },[maintenanceAlert]);
+ useEffect(()=>{
+  if(!signoutConfirm)return;
+  if(signoutConfirm.countdown<=0){
+   signOut();
+   return;
+  }
+  const timer=setTimeout(()=>{
+   setSignoutConfirm(prev=>{
+    if(!prev)return null;
+    if(prev.countdown<=1){
+     signOut();
+     return {countdown:0};
+    }
+    return {countdown:prev.countdown-1};
+   });
+  },1000);
+  return ()=>clearTimeout(timer);
+ },[signoutConfirm]);
  useEffect(()=>{
   if(page!=='Pipeline'||!can(user,'leads:write'))return;
   const cards=[...document.querySelectorAll('.ws-lead-card')];
@@ -79,13 +141,13 @@ export default function App(){
   {drawer&&<button className="ws-scrim" aria-label="Close navigation" onClick={()=>setDrawer(false)}/>}
   <aside className={`ws-sidebar ${drawer?'ws-sidebar-open':''}`} id="nexbrief-navigation">
    <div className="ws-icon-rail" aria-label="Workspace sections">
-    <a className="ws-rail-brand" href="/" aria-label="NexBrief home"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /></a>
+    <button type="button" className="ws-rail-brand" aria-label="NexBrief overview" onClick={()=>go('Overview')}><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /></button>
     <span className="ws-rail-rule"/>
     {sidebarGroups.filter(group=>['overview','growth','settings'].includes(group.id)||group.links.some(([,permission])=>can(user,permission))).map(group=>{const GroupIcon=group.Icon;const selected=railSection===group.id;return <button key={group.id} className={`ws-rail-button ${selected?'is-selected':''}`} aria-label={group.title} aria-pressed={selected} title={group.title} onClick={()=>go(group.links[0][0])}><GroupIcon size={18}/></button>;})}
-    <div className="ws-rail-bottom"><span className="ws-rail-avatar" title={user?.name||'Your account'}>{initials(user?.name)}</span><button className="ws-rail-button" aria-label="Sign out" title="Sign out" onClick={signOut}><LogOut size={17}/></button></div>
+    <div className="ws-rail-bottom"><span className="ws-rail-avatar" title={user?.name||'Your account'}>{initials(user?.name)}</span><button type="button" className="ws-rail-button" aria-label="Sign out" title="Sign out" onClick={()=>setSignoutConfirm({countdown:10})}><LogOut size={17}/></button></div>
    </div>
    <div className="ws-nav-panel">
-    <div className="ws-nav-panel-brand"><a href="/" aria-label="NexBrief home">nexbrief<span>.</span></a><button className="ws-mobile-close" aria-label="Close navigation" onClick={()=>setDrawer(false)}><X size={20}/></button></div>
+    <div className="ws-nav-panel-brand"><button type="button" className="ws-brand-inline-btn" onClick={()=>go('Overview')}>nexbrief<span>.</span></button><button className="ws-mobile-close" aria-label="Close navigation" onClick={()=>setDrawer(false)}><X size={20}/></button></div>
     <div className="ws-panel-account"><span className="ws-avatar">{initials(user?.name)}</span><span className="ws-profile-meta"><strong>{user?.name||'Your account'}</strong><small>{user?.workspace?.name||'Personal workspace'}</small></span></div>
     <div className="ws-current-section"><span className="ws-eyebrow">YOUR WORKSPACE</span><h2>{railSection==='admin'?'Administration':'Client workspace'}</h2><p>{railSection==='admin'?'People, access, and accountability.':'From first inquiry to paid deposit.'}</p></div>
     {sidebarGroups.filter(group=>group.id==='overview'||group.id==='growth'||group.id==='settings'||group.links.some(([,permission])=>can(user,permission))).map(group=><nav className="ws-nav" aria-label={`${group.title} pages`} key={group.id}><span className="ws-nav-label">{group.id==='journey'?'CLIENT WORKFLOW':group.title.toUpperCase()}</span>{group.links.map(([label,permission],index)=>{
@@ -96,7 +158,7 @@ export default function App(){
       const ItemIcon={'Overview':LayoutDashboard,'Capture leads':Users,'Qualify leads':ShieldCheck,'Follow-ups':Clock3,'Sales pipeline':BriefcaseBusiness,'Proposals':FileText,'Deposits & payments':WalletCards,'AI outreach':Sparkles,'Activity':Activity,'Settings':Settings,'Business discovery':Globe2}[label]||group.Icon;
       return <button key={label} className={`ws-nav-item ${page===target?'is-active':''}`} aria-current={page===target?'page':undefined} onClick={()=>go(label)}><ItemIcon size={17}/><span>{target}</span>{step&&<span className="ws-flow-number">{step}</span>}{label==='Capture leads'&&leads.length>0&&<span className="ws-count">{leads.length}</span>}{label==='Business discovery'&&<span className="ws-soon">Soon</span>}</button>;
     })}</nav>)}
-    <div className="ws-sidebar-bottom"><span className="ws-sidebar-foot">NEXBRIEF CRM</span><button className="ws-mobile-signout" onClick={signOut}><LogOut size={17}/>Sign out</button></div>
+    <div className="ws-sidebar-bottom"><span className="ws-sidebar-foot">NEXBRIEF CRM</span><button type="button" className="ws-mobile-signout" onClick={()=>setSignoutConfirm({countdown:10})}><LogOut size={17}/>Sign out</button></div>
    </div>
   </aside>
   <main className="ws-main">
@@ -123,8 +185,61 @@ export default function App(){
     {page==='AI drafts'&&<div className="ws-ai-layout"><section className="ws-card ws-ai-card"><SectionHeader title="Prepare a client message" description="A starting draft based on the lead. You decide what to send."/><div className="ws-ai-controls"><label>Choose a client<select value={selectedLead} onChange={event=>setSelectedLead(event.target.value)}><option value="">Select a lead</option>{leads.map(lead=><option key={lead.id} value={lead.id}>{lead.company} · {lead.name}</option>)}</select></label><label>Message type<select value={draftKind} onChange={event=>setDraftKind(event.target.value)}><option value="outreach">First outreach</option><option value="followup">Follow-up</option><option value="proposal">Proposal introduction</option></select></label><button className="ws-button ws-primary" disabled={!selectedLead||busy||!can(user,'outreach:generate')} onClick={()=>makeDraft(leads.find(lead=>lead.id===selectedLead),draftKind)}>{busy?<span className="ws-spinner"/>:<Sparkles size={16}/>}Create draft</button></div><div className="ws-draft-area">{draft?<textarea aria-label="Review and edit your draft" value={draft} onChange={event=>setDraft(event.target.value)}/>:<div className="ws-draft-placeholder"><span><WandSparkles size={22}/></span><strong>Your draft appears here</strong><p>Choose a client and message type to prepare a draft.</p></div>}</div>{draft&&<div className="ws-draft-footer"><span>Review and edit it before sending.</span><button className="ws-button ws-secondary" onClick={()=>navigator.clipboard?.writeText(draft).then(()=>setToast('Draft copied to clipboard.')).catch(()=>setToast('Could not access your clipboard.'))}>Copy draft</button></div>}{drafts.length>0&&<div className="ws-saved-drafts"><strong>Saved drafts</strong>{drafts.slice(0,8).map(saved=>{const lead=leads.find(item=>item.id===String(saved.leadId));return <button key={saved._id} onClick={()=>{setDraft(saved.content);setSelectedLead(String(saved.leadId));setDraftKind(saved.kind);}}><span><b>{lead?.company||'Client message'}</b><small>{saved.kind} · {saved.createdAt?dateLabel(saved.createdAt):'Saved draft'}</small></span><ArrowRight size={14}/></button>})}</div>}<p className="ws-muted ws-page-note">Live AI requires the latest AI consent and a configured provider. Messages are not sent automatically.</p></section><aside className="ws-card ws-ai-side"><span className="ws-ai-side-icon"><ShieldCheck size={18}/></span><span className="ws-eyebrow">YOU ARE IN CONTROL</span><h2>Drafted with context. Sent by you.</h2><p>Keep your message personal and fact checked before you send it to a client.</p><ul><li><Check size={15}/>Mention a real detail</li><li><Check size={15}/>Make the next step clear</li><li><Check size={15}/>Review every detail</li></ul><button onClick={()=>go('Settings')}>Review AI preferences<ArrowRight size={15}/></button></aside></div>}
     {page==='Business discovery'&&<section className="ws-discovery"><span className="ws-discovery-icon"><Globe2 size={25}/></span><span className="ws-eyebrow">IN DEVELOPMENT</span><h2>Find a promising client. Start with a real opportunity.</h2><p>Business discovery is coming soon. The planned workflow helps you find businesses, review their public website details, and save qualified prospects to your CRM.</p><div className="ws-discovery-flow"><span><Search size={16}/>Find a business</span><ArrowRight size={15}/><span><FileText size={16}/>Review the opportunity</span><ArrowRight size={15}/><span><Users size={16}/>Save as a lead</span></div><small><LockKeyhole size={15}/>This section is a preview. Live business search and contact enrichment are not connected.</small></section>}
     {page==='Billing'&&<BillingPage user={user}/>}\r\n    {page==='Usage'&&<UsagePage user={user}/>}\r\n    {page==='Settings'&&(previewMode?<section className="ws-card ws-preview-settings"><ShieldCheck size={25}/><h2>Your workspace settings</h2><p>Sign in to manage privacy preferences and your workspace details.</p><a className="ws-button ws-primary" href="/sign-in">Sign in <ArrowRight size={16}/></a></section>:<><WorkspaceSettings user={user} onSave={async data=>{const result=await mutate(()=>api('/privacy/workspace',{method:'PATCH',body:JSON.stringify(data)}));setUser(current=>({...current,workspace:result?.data||{...current.workspace,...data}}));setToast('Workspace settings saved.');}} onUserChange={setUser}/><PlanCard plan={user?.workspace?.plan||'free'}/><MemberPrivacyPanel user={user}/></>)}
-   </div><footer className="ws-footer"><span><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><b>nexbrief.</b></span><span>Your client work, moving.</span><button onClick={()=>go('Settings')}>Settings <ArrowRight size={13}/></button></footer>
+   </div><footer className="ws-footer"><button type="button" className="ws-footer-brand-btn" onClick={()=>go('Overview')}><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><b>nexbrief.</b></button><span>Your client work, moving.</span><button onClick={()=>go('Settings')}>Settings <ArrowRight size={13}/></button></footer>
   </main>
+  {maintenanceAlert&&<div className="ws-maintenance-modal-backdrop" role="alertdialog" aria-modal="true" aria-labelledby="maintenance-popup-title">
+   <div className="ws-maintenance-modal">
+    <div className="ws-maintenance-icon-badge" aria-hidden="true"><LockKeyhole size={28}/></div>
+    <span className="ws-maintenance-kicker">MAINTENANCE ACTIVATED</span>
+    <h2 id="maintenance-popup-title">Scheduled Maintenance in Progress</h2>
+    <p className="ws-maintenance-subtitle">An administrator has activated maintenance mode for NexBrief.</p>
+    <div className="ws-maintenance-admin-msg">
+     <span className="ws-maintenance-admin-msg-label">Notice from Admin</span>
+     <p>{maintenanceAlert.message}</p>
+    </div>
+    <div className="ws-maintenance-countdown-box">
+     <div className="ws-maintenance-countdown-circle">
+      <strong>{maintenanceAlert.countdown}</strong>
+      <small>sec</small>
+     </div>
+     <div className="ws-maintenance-countdown-text">
+      <strong>Auto-logging out for data safety</strong>
+      <p>Your session will securely end in {maintenanceAlert.countdown} second{maintenanceAlert.countdown===1?'':'s'}.</p>
+     </div>
+    </div>
+    <div className="ws-maintenance-actions">
+     <button className="ws-button ws-primary ws-maintenance-logout-btn" onClick={signOut}>
+      <LogOut size={16}/> Securely log out now
+     </button>
+    </div>
+   </div>
+  </div>}
+  {signoutConfirm&&<div className="ws-maintenance-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="signout-popup-title">
+   <div className="ws-maintenance-modal ws-signout-modal">
+    <div className="ws-signout-icon-badge" aria-hidden="true"><LogOut size={26}/></div>
+    <span className="ws-signout-kicker">CONFIRM SIGN OUT</span>
+    <h2 id="signout-popup-title">Ready to sign out?</h2>
+    <p className="ws-maintenance-subtitle">Are you sure you want to exit your workspace? You will be safely signed out and returned to the login page.</p>
+    <div className="ws-maintenance-countdown-box ws-signout-countdown-box">
+     <div className="ws-maintenance-countdown-circle ws-signout-circle">
+      <strong>{signoutConfirm.countdown}</strong>
+      <small>sec</small>
+     </div>
+     <div className="ws-maintenance-countdown-text ws-signout-countdown-text">
+      <strong>Auto-signout countdown</strong>
+      <p>Signing out automatically in {signoutConfirm.countdown} second{signoutConfirm.countdown===1?'':'s'}. Click Cancel to stay in your workspace.</p>
+     </div>
+    </div>
+    <div className="ws-signout-actions">
+     <button type="button" className="ws-button ws-secondary ws-signout-cancel-btn" onClick={()=>setSignoutConfirm(null)}>
+      Cancel & Stay
+     </button>
+     <button type="button" className="ws-button ws-primary ws-signout-confirm-btn" onClick={signOut}>
+      <LogOut size={16}/> Confirm Sign Out
+     </button>
+    </div>
+   </div>
+  </div>}
   {dialog&&<Dialog title={dialog==='proposal'?'Create a proposal':dialog.lead?'Edit lead details':'Add a new lead'} onClose={()=>setDialog(null)}>{dialog==='proposal'?<ProposalForm leads={leads} currency={currency} onSave={saveProposal}/>:<LeadForm key={dialog.lead?.id||'new'} lead={dialog.lead} currency={currency} onSave={saveLead}/>}</Dialog>}
   {toast&&<div role="status" className="ws-toast">{toast}<button aria-label="Dismiss" onClick={()=>setToast('')}><X size={16}/></button></div>}
  </div>;

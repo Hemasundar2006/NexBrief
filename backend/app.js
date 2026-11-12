@@ -1,5 +1,8 @@
 import express from "express";
 import cors from "cors";
+import path from "node:path";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js";
@@ -38,6 +41,15 @@ app.use(
 );
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false }));
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const publicDir = path.resolve(__dirname, "../frontend/public");
+const distDir = path.resolve(__dirname, "../frontend/dist");
+
+app.use(express.static(publicDir));
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+}
 app.get(["/robots.txt", "/robust.txt"], (_req, res) => {
   res.type("text/plain").send(`User-agent: *
 Allow: /
@@ -180,6 +192,16 @@ app.use("/api/leads", leadRoutes);
 app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
 app.use("/api/growth", discoveryRoutes);
+
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) return next();
+  const indexHtml = path.join(distDir, "index.html");
+  if (fs.existsSync(indexHtml)) {
+    return res.sendFile(indexHtml);
+  }
+  next();
+});
+
 app.use(notFound);
 app.use(errorHandler);
 export default app;

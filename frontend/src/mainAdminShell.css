@@ -10,3 +10,6 @@
 .main-admin-btn:hover:not(:disabled){opacity:.9}
 .main-admin-btn:disabled{background:#e2e4e6;color:#8a8e94;cursor:not-allowed}
 .ws-maintenance-subnote{color:#78857b;font-size:12px;margin:12px 0 20px;display:block}
+.main-admin-nav-actions{margin-top:auto;padding-top:14px}
+.main-admin-signout-btn{width:100%;border:1px solid #fee2e2!important;background:#fff5f5!important;color:#dc2626!important;border-radius:10px!important;padding:11px 13px!important;font-weight:650!important;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s ease,border-color .15s ease}
+.main-admin-signout-btn:hover{background:#fee2e2!important;border-color:#fca5a5!important;color:#b91c1c!important}
