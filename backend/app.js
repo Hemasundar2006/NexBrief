@@ -193,8 +193,8 @@ app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
 app.use("/api/growth", discoveryRoutes);
 
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/api/")) return next();
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api/")) return next();
   const indexHtml = path.join(distDir, "index.html");
   if (fs.existsSync(indexHtml)) {
     return res.sendFile(indexHtml);
