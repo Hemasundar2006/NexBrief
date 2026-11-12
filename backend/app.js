@@ -41,6 +41,11 @@ app.use(express.urlencoded({ extended: false }));
 app.get(["/robots.txt", "/robust.txt"], (_req, res) => {
   res.type("text/plain").send(`User-agent: *
 Allow: /
+Allow: /features
+Allow: /how-it-works
+Allow: /pricing
+Allow: /testimonials
+Allow: /founder
 Allow: /start-free
 Allow: /sign-in
 Disallow: /app
@@ -58,6 +63,36 @@ app.get("/sitemap.xml", (_req, res) => {
     <lastmod>2026-11-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.nexbrief.in/features</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.nexbrief.in/how-it-works</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.nexbrief.in/pricing</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.nexbrief.in/testimonials</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.nexbrief.in/founder</loc>
+    <lastmod>2026-11-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.nexbrief.in/start-free</loc>
