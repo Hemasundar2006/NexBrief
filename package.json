@@ -1,0 +1,28 @@
+{
+  "name": "nexbrief-crm",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --config frontend/vite.config.js",
+    "server:dev": "node --watch backend/server.js",
+    "server:start": "node backend/server.js",
+    "server:check": "node --check backend/server.js",
+    "build": "vite build --config frontend/vite.config.js",
+    "preview": "vite preview --config frontend/vite.config.js",
+    "ai:check": "node --check ai-service/ai.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "lucide-react": "latest",
+    "mongoose": "latest",
+    "paytmchecksum": "^1.5.1",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "latest",
+    "zod": "latest"
+  }
+}

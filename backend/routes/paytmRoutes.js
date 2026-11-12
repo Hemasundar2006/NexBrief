@@ -1,0 +1,10 @@
+import {Router} from "express";
+import {createPaytmOrder,listMyBilling,paytmCallback} from "../controllers/paytmController.js";
+import {requireAuth,requirePermission} from "../middleware/auth.js";
+import {asyncHandler} from "../middleware/errors.js";
+import {rateLimit} from "../middleware/security.js";
+const router=Router();
+router.post("/order",requireAuth,requirePermission("workspace:manage"),rateLimit(10,60000),asyncHandler(createPaytmOrder));
+router.get("/transactions",requireAuth,requirePermission("workspace:manage"),asyncHandler(listMyBilling));
+router.post("/callback",asyncHandler(paytmCallback));
+export default router;

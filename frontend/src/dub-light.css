@@ -1,0 +1,375 @@
+/* Final light Dub-style layer: NexBrief content with an editorial SaaS surface. */
+body:has(.reaidy-page) {
+  background: #fbfcf8;
+  color: #111711;
+}
+.reaidy-page {
+  background: #fbfcf8;
+  color: #111711;
+}
+.reaidy-page::before {
+  position: absolute;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(#dce5d91a 1px, transparent 1px),
+    linear-gradient(90deg, #dce5d91a 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, black, transparent 65%);
+}
+.reaidy-page::after {
+  top: 40px;
+  background: radial-gradient(ellipse, #d9f5a75a, transparent 68%);
+}
+.rd-nav {
+  border-color: #dde5dc;
+  background: #fbfcf8e8;
+  box-shadow: 0 8px 28px #1b2a1c0b;
+}
+.rd-logo,
+.rd-logo b {
+  color: #152018;
+}
+.rd-logo span,
+.rd-title h2 span,
+.rd-hero h1 span,
+.rd-founder h2 span,
+.rd-closing h2 span {
+  color: #507a33;
+}
+.rd-nav nav {
+  color: #68766b;
+}
+.rd-nav nav a:hover {
+  color: #4f7d36;
+}
+.rd-white {
+  background: #151b16;
+  color: #f8faf5 !important;
+}
+.rd-hero {
+  min-height: 740px;
+  background: radial-gradient(ellipse at 50% 42%, #deefcc77, transparent 56%);
+}
+.rd-hero::before {
+  border-color: #d9e3d8;
+}
+.rd-hero h1 {
+  color: #121813;
+}
+.rd-hero h1 span {
+  text-shadow: none;
+}
+.rd-hero > p {
+  color: #68756b;
+}
+.rd-audience > button {
+  color: #839086;
+}
+.rd-audience > button.chosen {
+  color: #4f8135;
+}
+.rd-audience .rd-toggle {
+  background: #91c95e;
+  box-shadow:
+    0 0 0 5px #c9f27634,
+    0 8px 24px #7da54c33;
+}
+.reaidy-page .opportunity-search form {
+  background: #fff;
+  border-color: #9bbd7b;
+  box-shadow:
+    0 0 0 6px #c9f27621,
+    0 20px 55px #577a4e1b;
+}
+.reaidy-page .opportunity-search input {
+  color: #1b271d;
+}
+.reaidy-page .opportunity-search form > svg {
+  color: #789276;
+}
+.reaidy-page .opportunity-search button {
+  background: #172018;
+  color: #f4faef;
+}
+.search-meta {
+  color: #768477;
+}
+.opportunity-results {
+  border-color: #d9e4d6;
+  background: #f2f7ef;
+  box-shadow: 0 20px 50px #3d633c12;
+}
+.opportunity-results > a {
+  border-color: #d6e2d1;
+  background: #fff;
+  color: #172018;
+  transition:
+    transform 0.25s,
+    box-shadow 0.25s;
+}
+.opportunity-results > a:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 28px #2e512d14;
+}
+.opportunity-avatar {
+  background: #dff0c9;
+  color: #41652d;
+}
+.opportunity-results strong {
+  border-color: #e7eee4;
+  color: #355d2b;
+}
+.sample-note {
+  color: #829084;
+}
+.rd-audiences {
+  border-color: #e3e9e1;
+}
+.rd-audiences > small {
+  color: #879389;
+}
+.rd-audiences span {
+  color: #29372d;
+}
+.rd-audiences svg {
+  color: #689748;
+}
+.rd-features {
+  background: #f3f7f1;
+}
+.rd-section {
+  color: #182119;
+}
+.rd-title h2 {
+  color: #111711;
+}
+.rd-title p {
+  color: #6e7c70;
+}
+.rd-outline {
+  border-color: #aac797;
+  color: #3f6930 !important;
+}
+.rd-cards article,
+.rd-quotes article {
+  background: #fff;
+  border-color: #dce6da;
+  box-shadow: 0 8px 25px #24452409;
+}
+.rd-cards article:hover {
+  border-color: #9dbd84;
+  box-shadow: 0 18px 42px #24452416;
+}
+.rd-cards h3 {
+  color: #172219;
+}
+.rd-cards article > p {
+  color: #6c7a6e;
+}
+.rd-feature-icon {
+  background: #e4f5cc;
+  color: #4e7936;
+  box-shadow: none;
+}
+.rd-mini {
+  background: #f7faf5;
+  border-color: #dde8d8;
+}
+.rd-mini-lead {
+  border-color: #e3eade;
+}
+.rd-mini-lead b {
+  color: #28372b;
+}
+.rd-mini-lead small,
+.rd-mini > small,
+.rd-ready {
+  color: #618550;
+}
+.rd-mini > p,
+.rd-money,
+.rd-money span {
+  color: #657468;
+}
+.rd-workspace {
+  background: #fff;
+  border-color: #d7e5d0;
+  box-shadow: 0 24px 65px #31563114;
+}
+.rd-workspace aside {
+  background: #f0f6eb;
+  border-right: 1px solid #dfe9db;
+}
+.rd-workspace aside > b {
+  color: #365c2d;
+}
+.rd-workspace aside button {
+  color: #6f806f;
+}
+.rd-workspace aside button.active {
+  background: #dceec9;
+  color: #436d32;
+}
+.rd-work-content > small {
+  color: #829080;
+}
+.rd-work-content h3 {
+  color: #1d2c21;
+}
+.rd-demo-card {
+  background: #f4f8f1;
+  border-color: #d7e8ce;
+}
+.rd-demo-card p {
+  color: #627364;
+}
+.rd-demo-card span {
+  color: #518034;
+}
+.rd-step-tabs button {
+  background: #fff;
+  border-color: #d6e4d1;
+  color: #6b806b;
+}
+.rd-step-tabs button.active {
+  background: #c9f276;
+  color: #243a1e;
+}
+.rd-testimonials {
+  background: #fff;
+}
+.rd-quotes article:nth-child(2) {
+  background: #eaf6dd;
+  border-color: #b8d895;
+}
+.rd-quotes article > p {
+  color: #657568;
+}
+.rd-quotes footer {
+  border-color: #dae6d7;
+}
+.rd-quotes footer b {
+  color: #334437;
+}
+.rd-founder {
+  background: #f0f6eb;
+  border-color: #d9e7d3;
+  box-shadow: 0 20px 60px #2b522b12;
+}
+.rd-founder h2 {
+  color: #19231b;
+}
+.rd-founder p {
+  color: #66776a;
+}
+.rd-founder h3 {
+  color: #25352a;
+}
+.rd-founder-role {
+  color: #6d8b61;
+}
+.rd-faq {
+  background: #fbfcf8;
+}
+.rd-faq article {
+  background: #fff;
+  border-color: #dce6da;
+}
+.rd-faq button {
+  color: #28382c;
+}
+.rd-faq article p {
+  color: #657468;
+}
+.rd-closing {
+  background: radial-gradient(ellipse at 50% 100%, #dcefc04d, transparent 65%);
+}
+.rd-closing h2 {
+  color: #151e16;
+}
+.rd-closing p {
+  color: #6d7c70;
+}
+.rd-footer {
+  color: #748176;
+  border-color: #dce6da;
+}
+.rd-footer > b {
+  color: #243128;
+}
+body:has(.app-shell) {
+  background: #f7faf5;
+}
+.app-shell {
+  background: #f7faf5;
+  color: #182219;
+}
+.app-shell .sidebar {
+  background: #fff;
+  border-right-color: #dfe8dc;
+}
+.app-shell .brand,
+.app-shell .topbar,
+.app-shell .breadcrumbs strong,
+.app-shell .page-heading h1,
+.app-shell .card h2,
+.app-shell .table-wrap td,
+.app-shell .metric-card b {
+  color: #182219;
+}
+.app-shell .main-content {
+  background:
+    radial-gradient(circle at 70% 0%, #e5f3d766, transparent 30%), #f7faf5;
+}
+.app-shell .topbar {
+  background: #ffffffdd;
+  border-bottom-color: #e0e9dd;
+}
+.app-shell .workspace-switcher,
+.app-shell .card,
+.app-shell .metric-card,
+.app-shell .kanban-column,
+.app-shell .kanban-card,
+.app-shell .tip-card {
+  background: #fff;
+  border-color: #dfe8dc;
+  color: #607066;
+  box-shadow: 0 8px 22px #2a492a08;
+}
+.app-shell .nav-item {
+  color: #728077;
+}
+.app-shell .nav-item.active {
+  background: #eaf5df;
+  color: #4d7b36;
+  box-shadow: inset 3px 0 #78aa50;
+}
+.app-shell .subheading,
+.app-shell .card p,
+.app-shell .metric-card small,
+.app-shell .focus-item span,
+.app-shell .quiet-note,
+.app-shell footer {
+  color: #718076;
+}
+.app-shell .table-wrap th {
+  color: #758479;
+  background: #f4f8f2;
+}
+.app-shell .table-wrap th,
+.app-shell .table-wrap td {
+  border-color: #e4ebe1;
+}
+.app-shell .search-box,
+.app-shell .search-box input,
+.app-shell select,
+.app-shell input,
+.app-shell textarea {
+  background: #fff;
+  border-color: #d9e4d5;
+  color: #304034;
+}
+.app-shell .coming-soon-card {
+  background: linear-gradient(135deg, #fff, #eef7e8);
+  border-color: #c9ddba;
+  box-shadow: 0 18px 40px #36593612;
+}

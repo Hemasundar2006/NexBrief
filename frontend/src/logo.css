@@ -1,0 +1,5 @@
+.nexbrief-logo-mark{display:block;width:34px;height:34px;object-fit:cover;border-radius:50%;background:#050505;box-shadow:0 3px 12px #0002}
+.ws-rail-brand .nexbrief-logo-mark{width:34px;height:34px}
+.main-admin-nav-brand .nexbrief-logo-mark,.platform-brand .nexbrief-logo-mark{display:inline-block;width:30px;height:30px;vertical-align:middle;margin-right:8px}
+.auth-brand .nexbrief-logo-mark{width:32px;height:32px;margin-right:9px}
+@media(max-width:650px){.nexbrief-logo-mark{width:32px;height:32px}}

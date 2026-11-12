@@ -1,0 +1,8 @@
+import {useState} from 'react';
+import {Search,ArrowUpRight} from 'lucide-react';
+export default function OpportunitySearch({video}){
+ const [query,setQuery]=useState('');
+ const items=video?[['Studio North','YouTube editing','$1,800'],['Daily Frame','Short-form video','$900'],['Bright Stories','Podcast editing','$2,400']]:[['Bright Dental','Website redesign','$3,500'],['Oak & Pine','Portfolio website','$5,200'],['Northstar Fitness','Landing page','$1,800']];
+ const results=items.filter(x=>x.join(' ').toLowerCase().includes(query.toLowerCase()));
+ return <div className="opportunity-search"><form onSubmit={e=>{e.preventDefault();document.getElementById('opportunity-results').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth',block:'center'})}}><Search size={20}/><input aria-label="Search sample opportunities" value={query} onChange={e=>setQuery(e.target.value)} placeholder={video?'Try “YouTube editing”':'Try “website redesign”'}/><button>Find opportunities <ArrowUpRight size={17}/></button></form><div className="search-meta"><span><i/> Explore a sample pipeline</span><span role="status" aria-live="polite">{results.length} matching opportunities</span></div><div id="opportunity-results" className="opportunity-results">{results.map(([name,service,value])=><a href="/app" key={name}><span className="opportunity-avatar">{name.split(' ').map(x=>x[0]).join('')}</span><div><b>{name}</b><small>{service}</small></div><strong>{value}</strong><ArrowUpRight size={15}/></a>)}{!results.length&&<p>No matches in this demo. Try a different service.</p>}</div><small className="sample-note">Sample data · Search filters these examples, not a live lead database</small></div>
+}
