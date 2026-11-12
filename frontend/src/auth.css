@@ -7,3 +7,5 @@
 .auth-submit:hover,.rd-cta-glow:hover{box-shadow:none!important}
 @media(prefers-reduced-motion:reduce){.auth-submit:hover:before,.auth-submit:focus-visible:before,.rd-cta-glow:hover:before,.rd-cta-glow:focus-visible:before{animation:none}}
 .auth-plan-choice{border:0;margin:4px 0 12px;padding:0;display:grid;gap:9px}.auth-plan-choice legend{font-weight:700;margin-bottom:10px}.auth-plan-choice>label{display:flex;align-items:flex-start;gap:12px;border:1px solid #dedede;border-radius:14px;padding:14px;cursor:pointer}.auth-plan-choice>label:has(input:checked){border-color:#171717;background:#f7f7f7}.auth-plan-choice input{margin-top:4px;accent-color:#171717}.auth-plan-choice label span{display:grid;gap:3px}.auth-plan-choice small,.auth-plan-choice p{color:#777;font-size:12px;line-height:1.5}.auth-plan-choice p{margin:1px 0 0}
+.auth-maintenance-alert{margin:14px 0;padding:12px 14px;border:1px solid #fed7aa;border-radius:10px;background:#fffbeb;color:#9a3412;font-size:11px;line-height:1.5;display:flex;align-items:flex-start;gap:10px}
+.auth-maintenance-alert svg{flex-shrink:0;color:#d97706;margin-top:1px}

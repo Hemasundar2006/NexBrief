@@ -46,7 +46,7 @@ function signJwt(payload) {
     .digest("base64url");
   return `${h}.${p}.${s}`;
 }
-function verifyJwt(token) {
+export function verifyJwt(token) {
   const [h, p, s] = String(token || "").split(".");
   if (!h || !p || !s) return null;
   const expected = createHmac("sha256", accessSecret)

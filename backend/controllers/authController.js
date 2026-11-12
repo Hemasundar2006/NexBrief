@@ -19,6 +19,7 @@ import {
 } from "../middleware/auth.js";
 import { audit } from "../services/auditService.js";
 import { seedWorkspaceRoles } from "../services/roleService.js";
+import { getPlatformSettings } from "../services/platformSettingsService.js";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -58,6 +59,17 @@ function validation(res, result) {
 }
 
 export async function register(req, res) {
+  const settings = await getPlatformSettings();
+  if (settings.pauseRegistrations || settings.maintenanceMode) {
+    return res.status(503).json({
+      error: {
+        code: "REGISTRATIONS_PAUSED",
+        message:
+          settings.maintenanceNotice ||
+          "New member registrations are temporarily paused for scheduled maintenance.",
+      },
+    });
+  }
   const value = validation(res, registerSchema.safeParse(req.body));
   if (!value || !value.email) return;
   const email = value.email.toLowerCase();
@@ -131,6 +143,17 @@ export async function login(req, res) {
         message: "Email or password is incorrect.",
       },
     });
+  const settings = await getPlatformSettings();
+  if (settings.maintenanceMode && !user.platformOwner) {
+    return res.status(503).json({
+      error: {
+        code: "PLATFORM_MAINTENANCE",
+        message:
+          settings.maintenanceNotice ||
+          "NexBrief is currently undergoing scheduled maintenance. Please check back shortly.",
+      },
+    });
+  }
   user.lastLoginAt = new Date();
   await user.save();
   const current = safeUser(user);
@@ -181,6 +204,17 @@ export async function me(req, res) {
     .select("-passwordHash")
     .lean();
   if (!user) return res.status(401).json({ error: { code: "UNAUTHORIZED" } });
+  const settings = await getPlatformSettings();
+  if (settings.maintenanceMode && !user.platformOwner) {
+    return res.status(503).json({
+      error: {
+        code: "PLATFORM_MAINTENANCE",
+        message:
+          settings.maintenanceNotice ||
+          "NexBrief is currently undergoing scheduled maintenance. Please check back shortly.",
+      },
+    });
+  }
   const current = safeUser(user);
   const [role, workspace] = await Promise.all([
     RoleModel.findOne({workspaceId:user.workspaceId,key:current.role,active:true}).select('permissions').lean(),

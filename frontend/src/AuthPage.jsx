@@ -1,12 +1,19 @@
-import { useState } from 'react';
-import { ArrowRight, Check, CircleHelp } from 'lucide-react';
-import { authToken, clientFlowApi } from './api';
+import { useEffect, useState } from 'react';
+import { ArrowRight, Check, CircleHelp, AlertTriangle } from 'lucide-react';
+import { authToken, clientFlowApi, api } from './api';
 import './auth.css';
 
 export default function AuthPage({ mode = 'signup' }) {
   const signup = mode === 'signup';
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [platformStatus, setPlatformStatus] = useState(null);
+
+  useEffect(() => {
+    api('/status')
+      .then(res => setPlatformStatus(res))
+      .catch(() => {});
+  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -40,6 +47,18 @@ export default function AuthPage({ mode = 'signup' }) {
       <div className="auth-story"><span className="auth-kicker">NEXBRIEF / YOUR CREATIVE BUSINESS</span><h1>{signup ? <>Every lead.<br/><span>A clear next step.</span></> : <>Welcome back<br/><span>to your workflow.</span></>}</h1><p>{signup ? 'Keep client conversations, follow-ups, proposals, and deposits moving in one simple workspace.' : 'Pick up where you left off and keep your client projects moving.'}</p><div className="auth-proof"><Check size={16}/><span>Made for freelance web developers and video editors</span></div></div>
       <form className="auth-card" onSubmit={submit}>
         <div className="auth-card-heading"><span>{signup ? 'GET STARTED' : 'YOUR WORKSPACE'}</span><h2>{signup ? 'Create your account' : 'Sign in'}</h2><p>{signup ? 'Start organizing your next client opportunity.' : 'Enter the email and password for your account.'}</p></div>
+        {signup && (platformStatus?.pauseRegistrations || platformStatus?.maintenance) && (
+          <div className="auth-maintenance-alert" role="alert">
+            <AlertTriangle size={16}/>
+            <span>{platformStatus.notice || 'New account registrations are temporarily paused for maintenance.'}</span>
+          </div>
+        )}
+        {!signup && platformStatus?.maintenance && (
+          <div className="auth-maintenance-alert" role="alert">
+            <AlertTriangle size={16}/>
+            <span>{platformStatus.notice || 'NexBrief is currently undergoing maintenance. Administrator sign in is still active.'}</span>
+          </div>
+        )}
         {signup && <label>Your name<input name="name" autoComplete="name" placeholder="Alex Morgan" minLength="2" maxLength="100" required/></label>}
         <label>Email address<input name="email" type="email" autoComplete="email" placeholder="you@example.com" required/></label>
         <label>Password<input name="password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} minLength={signup ? 10 : 1} maxLength="128" placeholder={signup ? 'At least 10 characters' : 'Your password'} required/></label>

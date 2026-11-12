@@ -396,6 +396,24 @@ const QuotaReservationModel =
 const OutreachDraftModel =
   mongoose.models.OutreachDraft ||
   mongoose.model("OutreachDraft", OutreachDraftSchema);
+const PlatformSettingSchema = new Schema(
+  {
+    key: { type: String, default: "global", unique: true, index: true },
+    maintenanceMode: { type: Boolean, default: false },
+    pauseRegistrations: { type: Boolean, default: false },
+    maintenanceNotice: {
+      type: String,
+      default:
+        "NexBrief is currently undergoing scheduled maintenance. Please check back shortly.",
+      maxlength: 500,
+    },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+  },
+  options,
+);
+const PlatformSettingModel =
+  mongoose.models.PlatformSetting ||
+  mongoose.model("PlatformSetting", PlatformSettingSchema);
 const BillingTransactionModel =
   mongoose.models.BillingTransaction ||
   mongoose.model("BillingTransaction", BillingTransactionSchema);
@@ -417,4 +435,5 @@ export {
   QuotaReservationModel,
   OutreachDraftModel,
   BillingTransactionModel,
+  PlatformSettingModel,
 };

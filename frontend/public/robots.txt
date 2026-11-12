@@ -1,0 +1,13 @@
+# Robots.txt for NexBrief
+# https://www.nexbrief.in
+
+User-agent: *
+Allow: /
+Allow: /start-free
+Allow: /sign-in
+Disallow: /app
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://www.nexbrief.in/sitemap.xml
+
