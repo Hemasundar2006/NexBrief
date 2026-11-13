@@ -171,6 +171,8 @@ app.use("/api", async (req, res, next) => {
     req.path === "/status" ||
     req.path.startsWith("/platform") ||
     req.path.startsWith("/auth") ||
+    req.path === "/waitlist" ||
+    req.path === "/waitlist/count" ||
     req.path === "/subscriptions/webhook"
   ) {
     return next();
