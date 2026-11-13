@@ -500,6 +500,35 @@ const PlatformSettingSchema = new Schema(
 const PlatformSettingModel =
   mongoose.models.PlatformSetting ||
   mongoose.model("PlatformSetting", PlatformSettingSchema);
+const WaitlistSchema = new Schema({
+  name: { type: String, required: true, trim: true, maxlength: 120 },
+  email: { type: String, required: true, lowercase: true, trim: true, maxlength: 254 },
+  profession: { type: String, enum: ["web-developer", "video-editor", "creative"], required: true },
+  monthlyClientVolume: { type: String, required: true, maxlength: 80 },
+  currentMethod: { type: String, required: true, maxlength: 160 },
+  heardFrom: { type: String, required: true, maxlength: 160 },
+  expectedUse: { type: String, required: true, maxlength: 1000 },
+  consent: { type: Boolean, required: true },
+  status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending", index: true },
+  proGrantedAt: Date,
+  betaAccessUntil: Date,
+  reviewedAt: Date,
+  reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+}, options);
+WaitlistSchema.index({ email: 1 }, { unique: true });
+const FeedbackSchema = new Schema({
+  waitlistId: { type: Schema.Types.ObjectId, ref: "Waitlist", index: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", index: true },
+  email: { type: String, required: true, lowercase: true, trim: true },
+  difficulty: { type: String, required: true, maxlength: 1000 },
+  dislikedFeature: { type: String, required: true, maxlength: 1000 },
+  desiredFeature: { type: String, required: true, maxlength: 1000 },
+  recommend: { type: String, enum: ["yes", "maybe", "no"], required: true },
+  status: { type: String, enum: ["new", "reviewed", "planned", "completed"], default: "new", index: true },
+}, options);
+FeedbackSchema.index({ email: 1, createdAt: -1 });
+const WaitlistModel = mongoose.models.Waitlist || mongoose.model("Waitlist", WaitlistSchema);
+const FeedbackModel = mongoose.models.Feedback || mongoose.model("Feedback", FeedbackSchema);
 const BillingTransactionModel =
   mongoose.models.BillingTransaction ||
   mongoose.model("BillingTransaction", BillingTransactionSchema);
@@ -525,6 +554,8 @@ export {
   OutreachDraftModel,
   BillingTransactionModel,
   PlatformSettingModel,
+  WaitlistModel,
+  FeedbackModel,
   SubscriptionModel,
   SubscriptionTransactionModel,
   SubscriptionWebhookModel,

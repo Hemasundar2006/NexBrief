@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import salesRoutes from "./routes/salesRoutes.js";
 import privacyRoutes from "./routes/privacyRoutes.js";
+import waitlistRoutes from "./routes/waitlistRoutes.js";
 import discoveryRoutes from "./routes/discoveryRoutes.js";
 import platformRoutes from "./routes/platformRoutes.js";
 import paytmRoutes from "./routes/paytmRoutes.js";
@@ -202,6 +203,7 @@ app.use("/api", journeyRoutes);
 app.use('/api',workflowRoutes);
 app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
+app.use("/api", waitlistRoutes);
 app.use("/api/growth", discoveryRoutes);
 
 app.use((req, res, next) => {

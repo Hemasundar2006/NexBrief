@@ -7,6 +7,7 @@ import {
   RoleModel,
   UserModel,
   WorkspaceModel,
+  WaitlistModel,
 } from "../models/index.js";
 import {
   clearRefreshCookie,
@@ -83,12 +84,15 @@ export async function register(req, res) {
     });
   const userId = new mongoose.Types.ObjectId();
   const workspaceId = new mongoose.Types.ObjectId();
+  const beta = await WaitlistModel.findOne({ email, status: 'approved', betaAccessUntil: { $gt: new Date() } }).lean();
   await WorkspaceModel.create({
     _id: workspaceId,
     name: `${value.name}'s workspace`,
     ownerId: userId,
     profession: value.profession,
+    ...(beta ? { plan: 'pro', billingStatus: 'active', subscriptionStatus: 'BETA', expiresAt: beta.betaAccessUntil } : {}),
   });
+  if (beta) await WaitlistModel.updateOne({ _id: beta._id }, { $set: { reviewedAt: new Date() } });
   const serviceRole =
     value.serviceRole ||
     (value.profession === "web-developer"
