@@ -33,6 +33,11 @@ const allowedOrigins = new Set(
     .map((value) => value.trim().replace(/\/+$/, ""))
     .filter(Boolean),
 );
+[
+  "https://www.nexbrief.in",
+  "https://nexbrief.in",
+  "https://app.nexbrief.in",
+].forEach((origin) => allowedOrigins.add(origin));
 app.use(securityHeaders);
 app.use(
   cors({

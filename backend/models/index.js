@@ -381,7 +381,7 @@ const BillingTransactionSchema = new Schema(
 );
 const SubscriptionSchema = new Schema(
   {
-    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     planId: { type: String, enum: ["pro", "plus"], required: true },
     planName: { type: String, required: true },
