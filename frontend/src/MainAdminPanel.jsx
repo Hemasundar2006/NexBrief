@@ -27,5 +27,5 @@ function MemberAccountsPanel({preview=false}){
 }
 
 export default function MainAdminPanel(props) {
-  return <><MemberAccountsPanel {...props}/><WaitlistAdmin {...props}/></>;
+  return <MemberAccountsPanel {...props}/>;
 }

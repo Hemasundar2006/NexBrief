@@ -1,8 +1,9 @@
 import {useEffect,useState} from 'react';
-import {Activity,Check,Construction,CreditCard,LogOut,RefreshCw,ShieldCheck,TrendingUp,Users} from 'lucide-react';
+import {Activity,Check,ClipboardList,Construction,CreditCard,LogOut,MessageSquare,RefreshCw,ShieldCheck,TrendingUp,UserPlus,Users} from 'lucide-react';
 import MainAdminPanel from './MainAdminPanel';
 import { AdminBilling, AdminTransactionLedger } from './AdminBillingPages';
 import AccountSecurityForm from './AccountSecurityForm';
+import WaitlistAdmin from './WaitlistAdmin';
 import {api,authToken} from './api';
 import './mainAdminShell.css';
 import './admin-polish.css';
@@ -191,11 +192,6 @@ function AdminUsage({preview}){const [members,setMembers]=useState(preview?[{nam
 
 export default function MainAdminShell({preview=false}){
   const [view,setView]=useState('members');
-  async function adminSignOut(){
-    if(!preview){
-      try{ await api('/auth/logout',{method:'POST'}); }catch{}
-    }
-    authToken.clear();
-    window.location.assign('/sign-in');
-  }
-  return <div className="main-admin-shell"><aside className="main-admin-nav"><div className="main-admin-nav-brand"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><b>nexbrief.</b></div><span className="main-admin-nav-label">MAIN ADMIN</span><button className={view==='members'?'is-active':''} onClick={()=>setView('members')}><Users size={17}/>Member accounts</button><button className={view==='usage'?'is-active':''} onClick={()=>setView('usage')}><TrendingUp size={17}/>Usage & limits</button><button className={view==='billing'?'is-active':''} onClick={()=>setView('billing')}><CreditCard size={17}/>Billing & transactions</button><button className={view==='maintenance'?'is-active':''} onClick={()=>setView('maintenance')}><Construction size={17}/>Maintenance modes</button><button className={view==='activity'?'is-active':''} onClick={()=>setView('activity')}><Activity size={17}/>Owner activity</button><button className={view==='security'?'is-active':''} onClick={()=>setView('security')}><ShieldCheck size={17}/>Account security</button><div className="main-admin-nav-actions"><button type="button" className="main-admin-signout-btn" onClick={adminSignOut} title="Sign out of Main Admin"><LogOut size={16}/><span>Sign out</span></button></div><div className="main-admin-nav-footer"><ShieldCheck size={15}/>Account-level access only</div></aside><div className="main-admin-view">{view==='members'?<MainAdminPanel preview={preview}/>:view==='usage'?<AdminUsage preview={preview}/>:view==='billing'?<><AdminBilling preview={preview}/><AdminTransactionLedger preview={preview}/></>:view==='maintenance'?<Maintenance preview={preview}/>:view==='security'?<section className="main-admin-page"><AccountSecurityForm preview={preview}/></section>:<OwnerActivity preview={preview}/>}</div></div>}
+  async function adminSignOut(){if(!preview){try{await api('/auth/logout',{method:'POST'});}catch{}}authToken.clear();window.location.assign('/sign-in');}
+  const nav=(key,label,Icon)=><button className={view===key?'is-active':''} onClick={()=>setView(key)}><Icon size={17}/>{label}</button>;
+  return <div className="main-admin-shell"><aside className="main-admin-nav"><div className="main-admin-nav-brand"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true"/><b>nexbrief.</b></div><span className="main-admin-nav-label">MAIN ADMIN</span>{nav('members','Member accounts',Users)}{nav('usage','Usage & limits',TrendingUp)}{nav('billing','Billing & transactions',CreditCard)}{nav('maintenance','Maintenance modes',Construction)}{nav('activity','Owner activity',Activity)}{nav('security','Account security',ShieldCheck)}<span className="main-admin-nav-label main-admin-beta-label">FOUNDING BETA</span>{nav('waitlist','Waitlist applicants',UserPlus)}{nav('feedback','Feedback inbox',MessageSquare)}{nav('pro-access','Manual Pro access',ClipboardList)}<div className="main-admin-nav-actions"><button type="button" className="main-admin-signout-btn" onClick={adminSignOut} title="Sign out of Main Admin"><LogOut size={16}/><span>Sign out</span></button></div><div className="main-admin-nav-footer"><ShieldCheck size={15}/>Account-level access only</div></aside><div className="main-admin-view">{view==='members'?<MainAdminPanel preview={preview}/>:view==='usage'?<AdminUsage preview={preview}/>:view==='billing'?<><AdminBilling preview={preview}/><AdminTransactionLedger preview={preview}/></>:view==='maintenance'?<Maintenance preview={preview}/>:view==='security'?<section className="main-admin-page"><AccountSecurityForm preview={preview}/></section>:view==='waitlist'?<WaitlistAdmin preview={preview} mode="waitlist"/>:view==='feedback'?<WaitlistAdmin preview={preview} mode="feedback"/>:view==='pro-access'?<WaitlistAdmin preview={preview} mode="pro"/>:<OwnerActivity preview={preview}/>}</div></div>}
