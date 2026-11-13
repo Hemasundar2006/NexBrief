@@ -196,7 +196,7 @@ const RefreshSessionSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, required: true, index: true },
     workspaceId: { type: Schema.Types.ObjectId, required: true, index: true },
     tokenHash: { type: String, required: true, unique: true, index: true },
-    expiresAt: { type: Date, required: true, index: true },
+    expiresAt: { type: Date, required: true },
     revokedAt: { type: Date, default: null, index: true },
     replacedBy: String,
     userAgent: { type: String, maxlength: 500 },
@@ -364,7 +364,7 @@ const OutreachDraftSchema = new Schema(
 );
 const BillingTransactionSchema = new Schema(
   {
-    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     plan: { type: String, enum: ["free", "pro", "plus"], required: true },
     amount: { type: Number, required: true, min: 0 },
@@ -419,7 +419,7 @@ const SubscriptionTransactionSchema = new Schema(
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription", index: true },
     cashfreeSubscriptionId: String,
-    cashfreePaymentId: { type: String, index: true },
+    cashfreePaymentId: { type: String },
     transactionType: { type: String, enum: ["initial", "recurring", "refund", "adjustment"], required: true },
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "INR", uppercase: true },

@@ -1,6 +1,6 @@
 import mongoose, {Schema} from 'mongoose';
 const options={timestamps:true,versionKey:false};
-const workspaceId={type:Schema.Types.ObjectId,required:true,index:true};
+const workspaceId={type:Schema.Types.ObjectId,required:true};
 const model=(name,fields,indexes=[])=>{const s=new Schema(fields,options);for(const [keys,opts] of indexes)s.index(keys,opts);return mongoose.models[name]||mongoose.model(name,s);};
 export const CaptureForm=model('CaptureForm',{workspaceId,token:{type:String,unique:true,required:true},enabled:{type:Boolean,default:true},title:{type:String,default:'Tell us about your project'},description:{type:String,default:'Share your goals, budget and timeline.'},services:{type:[String],default:['Website development','Website redesign','Video editing','Short-form video','Other service']},notify:{type:Boolean,default:true}});
 export const FollowSequence=model('FollowSequence',{workspaceId,leadId:{type:Schema.Types.ObjectId,required:true},paused:{type:Boolean,default:false},steps:[{dueAt:Date,subject:String,content:String,done:{type:Boolean,default:false},approved:{type:Boolean,default:false},sentAt:Date}]},[[{workspaceId:1,leadId:1},{unique:true}]]);
