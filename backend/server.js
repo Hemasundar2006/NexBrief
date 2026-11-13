@@ -1,8 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config({ path: new URL("./.env", import.meta.url) });
-import app from "./app.js";
-import { connectDatabase } from "./config/database.js";
+const { default: app } = await import("./app.js");
+const { connectDatabase } = await import("./config/database.js");
+const { startMailWorker } = await import("./services/journeyService.js");
 const port = Number(process.env.PORT || 4000);
+startMailWorker();
 connectDatabase().catch((error) =>
   console.error("MongoDB connection failed.", error.message),
 );

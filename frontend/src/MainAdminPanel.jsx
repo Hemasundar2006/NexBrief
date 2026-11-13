@@ -3,6 +3,7 @@ import {ArrowRight,Code2,Film,LogOut,Search,ShieldCheck,UserRound,Users} from 'l
 import {api,authToken} from './api';
 import './platform.css';
 import './mainAdmin.css';
+import AdminWorkflowHealth from './AdminWorkflowHealth';
 
 const sample={data:[
  {id:'member-web',name:'Alex Morgan',email:'alex@example.com',status:'active',role:'web-developer',serviceRole:'web-developer',lastLoginAt:'2026-11-11T15:30:00Z',createdAt:'2026-11-02T11:00:00Z',workspace:{name:'Morgan Creative Studio',profession:'web-developer',plan:'free',billingStatus:'trial'}},

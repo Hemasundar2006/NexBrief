@@ -15,7 +15,7 @@ const attempts = new Map();
 export const rateLimit =
   (max = 30, windowMs = 60000) =>
   (req, res, next) => {
-    const key = `${req.ip}:${req.baseUrl}`,
+    const key = `${req.ip}:${req.method}:${req.baseUrl}${req.path}`,
       now = Date.now(),
       entry = attempts.get(key);
     if (!entry || entry.reset < now) {

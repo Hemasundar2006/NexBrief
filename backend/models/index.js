@@ -17,6 +17,7 @@ const UserSchema = new Schema(
       trim: true,
       index: true,
     },
+    phone: { type: String, trim: true, maxlength: 20 },
     passwordHash: { type: String, required: true },
     workspaceId: { type: Schema.Types.ObjectId, required: true, index: true },
     role: { type: String, enum: ["owner", "member"], default: "member" },
@@ -56,6 +57,17 @@ const WorkspaceSchema = new Schema(
     currency: { type: String, default: "USD", maxlength: 3 },
     plan: { type: String, enum: ["free", "pro", "plus"], default: "free", index: true },
     billingStatus: { type: String, enum: ["trial", "active", "past_due"], default: "trial" },
+    subscriptionId: { type: String, index: true },
+    subscriptionStatus: { type: String, default: "NONE", index: true },
+    billingCycle: { type: String, enum: ["MONTHLY", "YEARLY"] },
+    subscriptionAmount: { type: Number, min: 0 },
+    subscriptionCurrency: { type: String, default: "INR", uppercase: true },
+    authorizationStatus: String,
+    mandateStatus: String,
+    activatedAt: Date,
+    nextBillingDate: Date,
+    expiresAt: Date,
+    autoRenew: { type: Boolean, default: false },
     retentionDays: { type: Number, default: 730, min: 30, max: 3650 },
   },
   options,
@@ -77,6 +89,10 @@ const LeadSchema = new Schema(
     qualificationScore: { type: Number, default: 0, min: 0, max: 100 },
     nextAction: { type: String, default: "Qualify this lead", maxlength: 240 },
     nextActionAt: Date,
+    deadline: Date,
+    contactConsentAt: Date,
+    captureId: String,
+    qualification: Schema.Types.Mixed,
     notes: { type: String, maxlength: 1e4 },
     tags: [{ type: String, trim: true, maxlength: 40 }],
     archivedAt: Date,
@@ -140,6 +156,8 @@ const ProposalSchema = new Schema(
     externalPaymentId: String,
     sentAt: Date,
     acceptedAt: Date,
+    revisions: {type:Number,default:1,min:0},
+    terms: {type:String,maxlength:5000},
   },
   options,
 );
@@ -360,6 +378,66 @@ const BillingTransactionSchema = new Schema(
   },
   { timestamps: true },
 );
+const SubscriptionSchema = new Schema(
+  {
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    planId: { type: String, enum: ["pro", "plus"], required: true },
+    planName: { type: String, required: true },
+    billingCycle: { type: String, enum: ["MONTHLY", "YEARLY"], required: true },
+    recurringAmount: { type: Number, required: true, min: 0 },
+    currency: { type: String, default: "INR", uppercase: true },
+    subscriptionId: { type: String, required: true, unique: true, index: true },
+    cashfreeSubscriptionId: String,
+    subscriptionSessionId: String,
+    subscriptionStatus: { type: String, default: "INITIALIZED", index: true },
+    authorizationStatus: { type: String, default: "INITIALIZED" },
+    mandateStatus: String,
+    activatedAt: Date,
+    nextBillingDate: Date,
+    expiresAt: Date,
+    cancelledAt: Date,
+    cancellationReason: String,
+    autoRenew: { type: Boolean, default: true },
+    lastPaymentAt: Date,
+    lastPaymentStatus: String,
+  },
+  options,
+);
+SubscriptionSchema.index({ workspaceId: 1, subscriptionStatus: 1, createdAt: -1 });
+const SubscriptionTransactionSchema = new Schema(
+  {
+    workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    subscriptionId: { type: Schema.Types.ObjectId, ref: "Subscription", index: true },
+    cashfreeSubscriptionId: String,
+    cashfreePaymentId: { type: String, index: true },
+    transactionType: { type: String, enum: ["initial", "recurring", "refund", "adjustment"], required: true },
+    amount: { type: Number, required: true, min: 0 },
+    currency: { type: String, default: "INR", uppercase: true },
+    paymentStatus: { type: String, enum: ["SUCCESS", "FAILED", "PENDING", "REFUNDED"], required: true, index: true },
+    paymentMethod: String,
+    paymentTimestamp: Date,
+    verifiedAt: Date,
+    rawReference: { type: Schema.Types.Mixed, select: false },
+  },
+  options,
+);
+SubscriptionTransactionSchema.index({ cashfreePaymentId: 1 }, { unique: true, sparse: true });
+const SubscriptionWebhookSchema = new Schema(
+  {
+    eventId: { type: String, required: true, unique: true, index: true },
+    eventType: { type: String, required: true, index: true },
+    subscriptionId: String,
+    paymentId: String,
+    signatureVerified: { type: Boolean, required: true },
+    processingStatus: { type: String, enum: ["received", "processed", "failed", "ignored"], default: "received" },
+    rawPayload: { type: Schema.Types.Mixed, select: false },
+    processedAt: Date,
+    errorMessage: String,
+  },
+  options,
+);
 const UserModel = mongoose.models.User || mongoose.model("User", UserSchema);
 const WorkspaceModel =
   mongoose.models.Workspace || mongoose.model("Workspace", WorkspaceSchema);
@@ -417,6 +495,9 @@ const PlatformSettingModel =
 const BillingTransactionModel =
   mongoose.models.BillingTransaction ||
   mongoose.model("BillingTransaction", BillingTransactionSchema);
+const SubscriptionModel = mongoose.models.Subscription || mongoose.model("Subscription", SubscriptionSchema);
+const SubscriptionTransactionModel = mongoose.models.SubscriptionTransaction || mongoose.model("SubscriptionTransaction", SubscriptionTransactionSchema);
+const SubscriptionWebhookModel = mongoose.models.SubscriptionWebhook || mongoose.model("SubscriptionWebhook", SubscriptionWebhookSchema);
 export {
   ActivityModel,
   AuditModel,
@@ -436,4 +517,7 @@ export {
   OutreachDraftModel,
   BillingTransactionModel,
   PlatformSettingModel,
+  SubscriptionModel,
+  SubscriptionTransactionModel,
+  SubscriptionWebhookModel,
 };

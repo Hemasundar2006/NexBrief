@@ -10,6 +10,9 @@ import privacyRoutes from "./routes/privacyRoutes.js";
 import discoveryRoutes from "./routes/discoveryRoutes.js";
 import platformRoutes from "./routes/platformRoutes.js";
 import paytmRoutes from "./routes/paytmRoutes.js";
+import journeyRoutes from "./routes/journeyRoutes.js";
+import workflowRoutes from './routes/workflowRoutes.js';
+import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import {
   getPlatformSettings,
   isMaintenanceActive,
@@ -21,6 +24,8 @@ import { errorHandler, notFound } from "./middleware/errors.js";
 import { securityHeaders } from "./middleware/security.js";
 const app = express();
 app.disable("x-powered-by");
+// Render sits behind a reverse proxy; use the forwarded client IP for rate limits.
+app.set("trust proxy", 1);
 const allowedOrigins = new Set(
   (process.env.CLIENT_ORIGIN || "http://localhost:5173")
     .split(",")
@@ -39,6 +44,8 @@ app.use(
     credentials: true,
   }),
 );
+// Keep the original Cashfree webhook bytes available for signature verification.
+app.use("/api/subscriptions/webhook", express.raw({ type: "application/json", limit: "1mb" }));
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false }));
 
@@ -130,7 +137,7 @@ app.get("/api/health", async (_req, res) => {
     maintenance: settings.maintenanceMode,
     registrationsPaused: settings.pauseRegistrations,
     ai: process.env.OPENAI_API_KEY ? "configured" : "mock",
-    payments: process.env.STRIPE_SECRET_KEY ? "configured" : "manual",
+    payments: process.env.CASHFREE_APP_ID && process.env.CASHFREE_SECRET_KEY ? "cashfree-configured" : "cashfree-setup-required",
   });
 });
 
@@ -162,7 +169,8 @@ app.use("/api", async (req, res, next) => {
     req.path === "/health" ||
     req.path === "/status" ||
     req.path.startsWith("/platform") ||
-    req.path.startsWith("/auth")
+    req.path.startsWith("/auth") ||
+    req.path === "/subscriptions/webhook"
   ) {
     return next();
   }
@@ -188,7 +196,10 @@ app.use("/api", async (req, res, next) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/platform", platformRoutes);
 app.use("/api/paytm", paytmRoutes);
+app.use("/api", subscriptionRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api", journeyRoutes);
+app.use('/api',workflowRoutes);
 app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
 app.use("/api/growth", discoveryRoutes);

@@ -218,7 +218,7 @@ export async function me(req, res) {
   const current = safeUser(user);
   const [role, workspace] = await Promise.all([
     RoleModel.findOne({workspaceId:user.workspaceId,key:current.role,active:true}).select('permissions').lean(),
-    WorkspaceModel.findById(user.workspaceId).select('name profession currency plan billingStatus retentionDays').lean(),
+    WorkspaceModel.findById(user.workspaceId).select('name profession currency plan billingStatus retentionDays subscriptionId subscriptionStatus billingCycle subscriptionAmount subscriptionCurrency authorizationStatus mandateStatus activatedAt nextBillingDate expiresAt autoRenew').lean(),
   ]);
   res.json({ data: {...current, permissions: current.role === 'platform-owner' ? [] : role?.permissions || [], workspace} });
 }

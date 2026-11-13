@@ -2,6 +2,12 @@ import { z } from "zod";
 import { LeadModel } from "../models/index.js";
 import { interestLevels, leadStages } from "../config/constants.js";
 import { audit, recordActivity } from "../services/auditService.js";
+const servicePattern={
+  "video-editor":/(video|editing|editor|youtube|podcast|reels|short-form|motion graphics)/i,
+  "web-developer":/(website|web|landing page|portfolio|e-commerce|shopify|wordpress)/i,
+};
+function serviceAllowed(service,role){return !servicePattern[role]||servicePattern[role].test(String(service||""));}
+function scopeFilter(req){const pattern=servicePattern[req.user.serviceRole];return pattern?{service:{$regex:pattern}}:{};}
 export const leadSchema = z.object({
   name: z.string().trim().min(2).max(120),
   company: z.string().trim().min(2).max(160),
@@ -22,7 +28,7 @@ export const leadSchema = z.object({
 });
 export async function list(req, res) {
   const search = String(req.query.search || "").slice(0, 100),
-    filter = { workspaceId: req.user.workspaceId, archivedAt: null };
+    filter = { workspaceId: req.user.workspaceId, archivedAt: null, ...scopeFilter(req) };
   if (req.query.stage) filter.stage = req.query.stage;
   if (search)
     filter.$or = ["name", "company", "service", "email"].map((key) => ({
@@ -48,6 +54,7 @@ export async function get(req, res) {
     _id: req.params.id,
     workspaceId: req.user.workspaceId,
     archivedAt: null,
+    ...scopeFilter(req),
   }).lean();
   data
     ? res.json({ data })
@@ -59,6 +66,7 @@ export async function create(req, res) {
     return res.status(400).json({
       error: { code: "VALIDATION_ERROR", details: p.error.flatten() },
     });
+  if (!serviceAllowed(p.data.service,req.user.serviceRole)) return res.status(403).json({error:{code:"SERVICE_SCOPE_MISMATCH",message:"This account can only manage leads for its assigned service."}});
   const data = await LeadModel.create({
     ...p.data,
     workspaceId: req.user.workspaceId,
@@ -75,6 +83,8 @@ export async function importMany(req, res) {
     return res.status(400).json({
       error: { code: "VALIDATION_ERROR", details: p.error.flatten() },
     });
+  const invalid=p.data.leads.find(lead=>!serviceAllowed(lead.service,req.user.serviceRole));
+  if(invalid)return res.status(403).json({error:{code:"SERVICE_SCOPE_MISMATCH",message:"Imported leads must match this account's assigned service."}});
   const data = await LeadModel.insertMany(
     p.data.leads.map((lead) => ({
       ...lead,
@@ -91,8 +101,9 @@ export async function update(req, res) {
     return res.status(400).json({
       error: { code: "VALIDATION_ERROR", details: p.error.flatten() },
     });
+  if (p.data.service&&!serviceAllowed(p.data.service,req.user.serviceRole)) return res.status(403).json({error:{code:"SERVICE_SCOPE_MISMATCH",message:"This account can only manage leads for its assigned service."}});
   const data = await LeadModel.findOneAndUpdate(
-    { _id: req.params.id, workspaceId: req.user.workspaceId, archivedAt: null },
+    { _id: req.params.id, workspaceId: req.user.workspaceId, archivedAt: null, ...scopeFilter(req) },
     p.data,
     { new: true, runValidators: true },
   );
@@ -105,7 +116,7 @@ export async function update(req, res) {
 }
 export async function archive(req, res) {
   const data = await LeadModel.findOneAndUpdate(
-    { _id: req.params.id, workspaceId: req.user.workspaceId, archivedAt: null },
+    { _id: req.params.id, workspaceId: req.user.workspaceId, archivedAt: null, ...scopeFilter(req) },
     { archivedAt: new Date() },
   );
   if (!data) return res.status(404).json({ error: { code: "LEAD_NOT_FOUND" } });

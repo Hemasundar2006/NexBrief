@@ -6,6 +6,8 @@ export function notFound(_req, res) {
     .json({ error: { code: "NOT_FOUND", message: "API route not found." } });
 }
 export function errorHandler(error, _req, res, _next) {
+  if(error?.name==='ZodError')return res.status(400).json({error:{code:'VALIDATION_ERROR',message:'Please check the required fields.',details:error.flatten()}});
+  if(error?.status&&error.status>=400&&error.status<600)return res.status(error.status).json({error:{message:error.message}});
   console.error(error);
   if (error?.name === "CastError")
     return res.status(400).json({ error: { code: "INVALID_ID" } });

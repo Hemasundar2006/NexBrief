@@ -11,6 +11,7 @@ import {
 } from "../models/index.js";
 import { hashPassword, verifyPassword } from "../middleware/auth.js";
 import { audit } from "../services/auditService.js";
+import {journeyModels} from '../models/journey.js';
 export async function consents(req, res) {
   res.json({
     data: await ConsentModel.find({ userId: req.user.id })
@@ -55,12 +56,14 @@ export async function exportData(req, res) {
     ConsentModel.find({ workspaceId: w }).lean(),
   ]);
   await audit(req, "privacy.export");
+  const workflow=Object.fromEntries(await Promise.all(journeyModels.map(async model=>[model.modelName,await model.find({workspaceId:w}).lean()])));
   res.setHeader(
     "Content-Disposition",
     'attachment; filename="nexbrief-data-export.json"',
   );
   res.json({
     exportedAt: new Date().toISOString(),
+    workflow,
     user,
     workspace,
     leads,
@@ -84,6 +87,7 @@ export async function deleteAccount(req, res) {
     return res.status(401).json({ error: { code: "INVALID_CREDENTIALS" } });
   const w = req.user.workspaceId;
   await Promise.all([
+    ...journeyModels.map(model=>model.deleteMany({workspaceId:w})),
     LeadModel.deleteMany({ workspaceId: w }),
     ActivityModel.deleteMany({ workspaceId: w }),
     DraftModel.deleteMany({ workspaceId: w }),

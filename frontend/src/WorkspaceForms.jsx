@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {X, ArrowRight} from 'lucide-react';
 import {stages, localDateInput} from './workspaceUtils';
+import {serviceProfile} from './serviceConfig';
 
 export function Dialog({title, children, onClose}) {
   const dialog = useRef(null);
@@ -17,8 +18,9 @@ export function Dialog({title, children, onClose}) {
   </dialog>;
 }
 
-export function LeadForm({lead, currency, onSave}) {
+export function LeadForm({lead, currency, serviceRole='custom-service', onSave}) {
   const [busy,setBusy]=useState(false), [error,setError]=useState('');
+  const services=serviceProfile(serviceRole).services;
   async function submit(event) {
     event.preventDefault();setBusy(true);setError('');
     const form = new FormData(event.currentTarget);
@@ -33,7 +35,7 @@ export function LeadForm({lead, currency, onSave}) {
       <label>Company<input name="company" required minLength={2} maxLength={160} defaultValue={lead?.company} placeholder="Company or studio"/></label>
       <label>Email<input name="email" type="email" defaultValue={lead?.email} placeholder="taylor@example.com"/></label>
       <label>Phone<input name="phone" maxLength={40} defaultValue={lead?.phone} placeholder="Optional"/></label>
-      <label>Service<input name="service" list="ws-services" required minLength={2} maxLength={160} defaultValue={lead?.service} placeholder="Website redesign"/><datalist id="ws-services"><option>Website redesign</option><option>Video editing</option><option>Custom service</option></datalist></label>
+      <label>Service<select name="service" required defaultValue={lead?.service||services[0]}>{services.map(service=><option key={service}>{service}</option>)}</select></label>
       <label>Source<input name="source" maxLength={80} defaultValue={lead?.source} placeholder="Referral, website, social…"/></label>
       <label>Estimated project value<input name="value" type="number" min="0" step="0.01" required defaultValue={lead?.value || 0}/></label>
       <label>Currency<select name="currency" defaultValue={lead?.currency || currency || 'USD'}>{['USD','INR','EUR','GBP','CAD','AUD'].map(value=><option key={value}>{value}</option>)}</select></label>

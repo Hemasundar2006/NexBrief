@@ -5,6 +5,8 @@ import { WorkspaceModel, UserModel, AuditModel } from "../models/index.js";
 import { asyncHandler } from "../middleware/errors.js";
 import { audit } from "../services/auditService.js";
 import { listAdminBilling } from "../controllers/paytmController.js";
+import {integrationStatus} from '../services/journeyService.js';
+import {MailJob,CaptureForm,ServiceTemplate,FollowSequence} from '../models/journey.js';
 import {
   getPlatformSettings,
   updatePlatformSettings,
@@ -18,6 +20,10 @@ router.use(requireAuth, (req, res, next) => req.user.platformOwner
 router.get("/settings", asyncHandler(async (_req, res) => {
   const settings = await getPlatformSettings();
   res.json({ data: settings });
+}));
+router.get('/integrations',asyncHandler(async(_req,res)=>{
+ const [forms,templates,sequences,mail]=await Promise.all([CaptureForm.countDocuments({enabled:true}),ServiceTemplate.countDocuments(),FollowSequence.countDocuments(),MailJob.aggregate([{$group:{_id:'$status',count:{$sum:1}}}])]);
+ res.json({data:{status:integrationStatus(),usage:{enabledForms:forms,serviceTemplates:templates,followUpSequences:sequences,emailStatuses:Object.fromEntries(mail.map(row=>[row._id,row.count]))}}});
 }));
 
 router.patch("/settings", asyncHandler(async (req, res) => {

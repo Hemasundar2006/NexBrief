@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import LandingNav from './LandingNav';
 import LandingFooter from './LandingFooter';
@@ -7,6 +7,7 @@ import './dub-light.css';
 import './reaidy.css';
 import './dub-reference.css';
 import './landing-experience.css';
+import { api } from './api';
 
 const pricingPlans = [
   {
@@ -72,6 +73,8 @@ const pricingFaqs = [
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [faq, setFaq] = useState(-1);
+  const [plans, setPlans] = useState(pricingPlans);
+  useEffect(() => { api('/plans').then(result => { if (Array.isArray(result?.data)) setPlans(result.data.map(item => ({ ...item, name: item.name, price: item.monthlyAmount, yearlyPrice: item.yearlyAmount, label: item.id === 'free' ? 'GET STARTED' : item.id === 'pro' ? 'FOR GROWING FREELANCERS' : 'FOR HIGH-VOLUME CLIENT WORK', description: item.id === 'free' ? 'A simple home for your client work.' : item.id === 'pro' ? 'More support for a growing freelance business.' : 'More room for active pipelines and consistent outreach.', features: item.features || [] }))); }).catch(() => {}); }, []);
 
   return (
     <div className="reaidy-page">
@@ -124,14 +127,14 @@ export default function PricingPage() {
               </button>
             </div>
             <p className="rd-pricing-note">
-              Verification pricing: paid plans are temporarily ₹1. Checkout is not
-              connected yet.
+              Sandbox verification pricing is loaded from the backend. Recurring
+              checkout is handled securely by Cashfree after sign-in.
             </p>
           </aside>
 
           <div className="rd-plan-grid">
-            {pricingPlans.map((plan) => {
-              const monthly = plan.price;
+            {plans.map((plan) => {
+              const monthly = annual ? (plan.yearlyPrice ?? plan.price) : plan.price;
               return (
                 <article
                   className={`rd-plan-card ${plan.featured ? 'featured' : ''}`}
@@ -153,7 +156,7 @@ export default function PricingPage() {
                   </div>
                   <small className="rd-billing-caption">
                     {annual && plan.price
-                      ? `Billed ₹${(monthly * 12).toFixed(2)} per year`
+                        ? `Billed ₹${Number(monthly).toFixed(2)} per year`
                       : plan.price
                         ? 'Suggested monthly price'
                         : 'No payment required'}
@@ -167,7 +170,7 @@ export default function PricingPage() {
                     ))}
                   </ul>
                   <a
-                    href="/start-free"
+                    href={`/start-free?plan=${encodeURIComponent(String(plan.id || plan.name).toLowerCase())}&cycle=${annual ? 'YEARLY' : 'MONTHLY'}`}
                     className={plan.featured ? 'rd-primary' : 'rd-outline'}
                   >
                     Start free <ArrowRight size={15} />

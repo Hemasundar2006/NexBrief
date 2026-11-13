@@ -27,7 +27,11 @@ if (hasToken && !isPreview) {
 }
 
 let Page;
-if (rawPath === "/" || rawPath === "") {
+if (rawPath.startsWith('/proposal/')) {
+  Page = lazy(() => import('./ClientProposalPage.jsx'));
+} else if (rawPath.startsWith('/inquiry/')) {
+  Page = lazy(() => import('./InquiryPage.jsx'));
+} else if (rawPath === "/" || rawPath === "") {
   Page = lazy(() => import("./LandingPage.jsx"));
 } else if (rawPath === "/features") {
   Page = lazy(() => import("./FeaturesPage.jsx"));

@@ -12,11 +12,10 @@ import { asyncHandler } from "../middleware/errors.js";
 import { rateLimit } from "../middleware/security.js";
 
 const router = Router();
-router.use(rateLimit(20, 900000));
-router.post("/register", asyncHandler(register));
-router.post("/login", asyncHandler(login));
+router.post("/register", rateLimit(8, 900000), asyncHandler(register));
+router.post("/login", rateLimit(12, 900000), asyncHandler(login));
 router.post("/refresh", rateLimit(60, 900000), asyncHandler(refresh));
-router.post("/logout", asyncHandler(logout));
+router.post("/logout", rateLimit(30, 900000), asyncHandler(logout));
 router.post("/logout-all", requireAuth, asyncHandler(logoutAll));
 router.get("/me", requireAuth, asyncHandler(me));
 export default router;

@@ -11,6 +11,7 @@ import {
 import { paymentStatuses, proposalStatuses } from "../config/constants.js";
 import { audit, recordActivity } from "../services/auditService.js";
 import { confirmQuota, releaseQuota, reserveQuota } from "../services/quotaService.js";
+import {ProposalShare} from '../models/journey.js';
 export async function pipeline(req, res) {
   const workspaceId = new mongoose.Types.ObjectId(req.user.workspaceId);
   const [stages, totals, due] = await Promise.all([
@@ -140,6 +141,7 @@ export async function createProposal(req, res) {
   res.status(201).json({ data });
 }
 export async function updateProposal(req, res) {
+  if(await ProposalShare.exists({proposalId:req.params.id,workspaceId:req.user.workspaceId}))return res.status(409).json({error:{message:'Shared proposals are locked. Create a new proposal for revised terms.'}});
   const p = z
     .object({
       status: z.enum(proposalStatuses).optional(),
