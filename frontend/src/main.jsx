@@ -21,6 +21,8 @@ if (rawPath.startsWith('/proposal/')) {
   Page = lazy(() => import("./TestimonialsPage.jsx"));
 } else if (rawPath === "/founder") {
   Page = lazy(() => import("./FounderPage.jsx"));
+} else if (["/privacy", "/terms", "/refund-policy"].includes(rawPath)) {
+  Page = lazy(() => import("./LegalPage.jsx"));
 } else if (rawPath === "/sign-in" || rawPath === "/start-free") {
   Page = lazy(() =>
     import("./AuthPage.jsx").then(({ default: AuthPage }) => ({

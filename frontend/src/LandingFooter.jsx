@@ -39,6 +39,12 @@ export default function LandingFooter() {
             <a href="/sign-in">Sign in</a>
             <a href="/start-free">Start free <ArrowRight size={13} /></a>
           </div>
+          <div>
+            <b>Legal</b>
+            <a href="/privacy">Privacy</a>
+            <a href="/terms">Terms</a>
+            <a href="/refund-policy">Refund policy</a>
+          </div>
         </div>
       </div>
       <div className="rd-footer-bottom">
