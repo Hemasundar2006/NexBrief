@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, ArrowDown, ArrowRight, BarChart3, BriefcaseBusiness, CalendarDays, Check, ChevronDown, Clock3, FileText, Globe2, LayoutDashboard, LockKeyhole, LogOut, Mail, MapPinned, Menu, MoreHorizontal, PackageOpen, PlugZap, Plus, Search, Settings, ShieldCheck, Sparkles, Upload, Users, WalletCards, WandSparkles, X, Zap } from 'lucide-react';
+import { Activity, ArrowDown, ArrowRight, BarChart3, BriefcaseBusiness, CalendarDays, Check, ChevronDown, Clock3, FileText, Globe2, LayoutDashboard, LockKeyhole, LogOut, Mail, MapPinned, Menu, MoreHorizontal, PackageOpen, PlugZap, Plus, Route, Search, Settings, ShieldCheck, Sparkles, Upload, Users, WalletCards, WandSparkles, X, Zap } from 'lucide-react';
 import { api, authToken } from './api';
 import MainAdminShell from './MainAdminShell';
 import { WorkspaceSettings } from './WorkspacePanels';
@@ -41,13 +41,60 @@ function WorkspaceLoadingScreen({ overlay = false, message = 'Opening your works
   </div>;
 }
 
+const tourSteps = [
+  { page: 'Overview', label: 'Workspace overview', text: 'See active leads, follow-ups, pipeline value, and the work that needs attention today.' },
+  { page: 'Capture leads', label: 'Capture every inquiry', text: 'Add new clients manually, import them, or use your public inquiry form to keep every opportunity together.' },
+  { page: 'Qualify leads', label: 'Qualify the right work', text: 'Review fit, interest, budget, and service needs before spending time on an opportunity.' },
+  { page: 'Follow-ups', label: 'Never miss a follow-up', text: 'See what is due, prepare the next conversation, and keep each client moving.' },
+  { page: 'Sales pipeline', label: 'Move work through the pipeline', text: 'Track every lead by stage and move it forward as the conversation progresses.' },
+  { page: 'AI outreach', label: 'Start with a thoughtful draft', text: 'Create contextual outreach and follow-up drafts. You always review and send them yourself.' },
+  { page: 'Service templates', label: 'Reuse your best services', text: 'Save packages, deliverables, timelines, revisions, and deposit terms for future proposals.' },
+  { page: 'Proposals', label: 'Turn scope into a proposal', text: 'Create a clear proposal from a qualified lead and track the client decision in one place.' },
+  { page: 'Deposits & payments', label: 'Know when work can begin', text: 'Keep deposit status visible so accepted work moves into delivery with a clear payment record.' },
+];
+
+function WorkspaceTour({ open, onNavigate, onFinish }) {
+  const [step, setStep] = useState(0);
+  const [spotlight, setSpotlight] = useState(null);
+  useEffect(() => { if (open) setStep(0); }, [open]);
+  useEffect(() => {
+    if (!open) return undefined;
+    onNavigate(tourSteps[step].page);
+    const update = () => {
+      const target = document.querySelector('.ws-nav-item[aria-current="page"]') || document.querySelector('.ws-heading');
+      if (!target) return setSpotlight(null);
+      const rect = target.getBoundingClientRect();
+      setSpotlight({ top: rect.top - 7, left: rect.left - 7, width: rect.width + 14, height: rect.height + 14 });
+    };
+    const timer = setTimeout(update, 120);
+    window.addEventListener('resize', update);
+    return () => { clearTimeout(timer); window.removeEventListener('resize', update); };
+  }, [open, step, onNavigate]);
+  if (!open) return null;
+  const item = tourSteps[step];
+  const last = step === tourSteps.length - 1;
+  return <div className="ws-tour" role="dialog" aria-modal="true" aria-label="NexBrief workspace tour">
+    {spotlight && <div className="ws-tour-spotlight" style={spotlight} aria-hidden="true" />}
+    <section className="ws-tour-card">
+      <div className="ws-tour-card-top"><span>GUIDED WORKFLOW</span><b>{String(step + 1).padStart(2, '0')} / {String(tourSteps.length).padStart(2, '0')}</b></div>
+      <div className="ws-tour-icon"><Route size={18} /></div>
+      <h2>{item.label}</h2><p>{item.text}</p>
+      <div className="ws-tour-dots" aria-hidden="true">{tourSteps.map((_, index) => <i className={index <= step ? 'is-done' : ''} key={index} />)}</div>
+      <div className="ws-tour-actions"><button type="button" className="ws-tour-skip" onClick={onFinish}>Skip tour</button><button type="button" className="ws-tour-next" onClick={() => last ? onFinish() : setStep(value => value + 1)}>{last ? 'Finish tour' : 'Next'}<ArrowRight size={15} /></button></div>
+    </section>
+  </div>;
+}
+
 export default function App() {
   const [page, setPage] = useState('Overview'), [railSection, setRailSection] = useState('overview'), [drawer, setDrawer] = useState(false), [user, setUser] = useState(null), [leads, setLeads] = useState([]), [proposals, setProposals] = useState([]), [activities, setActivities] = useState([]), [drafts, setDrafts] = useState([]), [selectedLead, setSelectedLead] = useState(''), [draft, setDraft] = useState(''), [draftKind, setDraftKind] = useState('outreach'), [search, setSearch] = useState(''), [leadDate, setLeadDate] = useState(''), [leadPage, setLeadPage] = useState(1), [dialog, setDialog] = useState(null), [toast, setToast] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [maintenanceAlert, setMaintenanceAlert] = useState(null), [signoutConfirm, setSignoutConfirm] = useState(null);
   const currency = user?.workspace?.currency || 'USD';
+  const [tourOpen, setTourOpen] = useState(false);
   const serviceRole = user?.serviceRole || user?.workspace?.profession || 'custom-service';
   const hasPremiumPlan = ['pro', 'plus'].includes(String(user?.workspace?.plan || '').toLowerCase());
   const profile = serviceProfile(serviceRole);
   const sidebarGroups = navGroups;
+  const tourStorageKey = `nexbrief_workspace_tour_v1_${user?._id || user?.id || user?.email || 'member'}`;
+  useEffect(() => { if (user && !user.platformOwner && !previewMode && localStorage.getItem(tourStorageKey) !== 'complete') setTourOpen(true); }, [user?._id, user?.id, user?.email, user?.platformOwner, tourStorageKey]);
   const load = useCallback(async (initial = false) => {
     setLoading(true); setError('');
     if (previewMode) { setUser(previewAdmin ? { name: 'Hemasundar Maroti', role: 'platform-owner', platformOwner: true, permissions: [], workspace: { plan: 'free' } } : { ...previewUser, accountType: 'member', workspace: { ...previewUser.workspace, plan: 'free' } }); setLeads(previewAdmin ? [] : previewLeads); setProposals(previewAdmin ? [] : previewProposals); setActivities(previewAdmin ? [] : previewActivities); setDrafts([]); setLoading(false); return; }
@@ -159,8 +206,10 @@ export default function App() {
   if (loading && !user) return <main className="ws-startup"><WorkspaceLoadingScreen /></main>;
   if (!user) { const isMaintenance = error && error.toLowerCase().includes('maintenance'); return <main className="ws-startup"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><h1>{isMaintenance ? 'Under maintenance' : 'Open NexBrief'}</h1><p>{error || 'Your client workspace is ready when you are.'}</p>{isMaintenance ? <span className="ws-maintenance-subnote">We are performing scheduled improvements. Please check back shortly.</span> : <a className="ws-button ws-primary" href="/sign-in">Go to sign in <ArrowRight size={16} /></a>}</main>; }
   if (user.platformOwner) return <MainAdminShell preview={previewMode} />;
-  return <div className="workspace ws-content-reveal" onKeyDown={event => { if (event.key === 'Escape') setDrawer(false); }}>
+  const finishTour = () => { localStorage.setItem(tourStorageKey, 'complete'); setTourOpen(false); };
+  return <div className={`workspace ws-content-reveal ${tourOpen ? 'ws-tour-active' : ''}`} onKeyDown={event => { if (event.key === 'Escape') { setDrawer(false); if (tourOpen) finishTour(); } }}>
     {loading && <WorkspaceLoadingScreen overlay message="Syncing your workspace…" />}
+    <WorkspaceTour open={tourOpen} onNavigate={go} onFinish={finishTour} />
     {drawer && <button className="ws-scrim" aria-label="Close navigation" onClick={() => setDrawer(false)} />}
     <aside className={`ws-sidebar ${drawer ? 'ws-sidebar-open' : ''}`} id="nexbrief-navigation">
       <div className="ws-icon-rail" aria-label="Workspace sections">
@@ -181,7 +230,7 @@ export default function App() {
           const ItemIcon = { 'Overview': LayoutDashboard, 'Capture leads': Users, 'Qualify leads': ShieldCheck, 'Follow-ups': Clock3, 'Sales pipeline': BriefcaseBusiness, 'AI outreach': Sparkles, 'Proposals': FileText, 'Deposits & payments': WalletCards, 'Service templates': PackageOpen, 'Analytics': BarChart3, 'Activity': Activity, 'Settings': Settings, 'Integrations': PlugZap, 'Outbound discovery': MapPinned }[label] || group.Icon;
           return <button key={label} className={`ws-nav-item ${page === target ? 'is-active' : ''}`} aria-current={page === target ? 'page' : undefined} onClick={() => go(label)}><ItemIcon size={17} /><span>{target}</span>{step && <span className="ws-flow-number">{step}</span>}{label === 'Capture leads' && leads.length > 0 && <span className="ws-count">{leads.length}</span>}{label === 'Outbound discovery' && <span className="ws-soon">Soon</span>}</button>;
         })}</nav>)}
-        <div className="ws-sidebar-bottom"><span className="ws-sidebar-foot">NEXBRIEF CRM</span><button type="button" className="ws-mobile-signout" onClick={() => setSignoutConfirm({ countdown: 10 })}><LogOut size={17} />Sign out</button></div>
+        <div className="ws-sidebar-bottom"><button type="button" className="ws-tour-restart" onClick={() => setTourOpen(true)}><Route size={15} />Workspace tour</button><span className="ws-sidebar-foot">NEXBRIEF CRM</span><button type="button" className="ws-mobile-signout" onClick={() => setSignoutConfirm({ countdown: 10 })}><LogOut size={17} />Sign out</button></div>
       </div>
     </aside>
     <main className="ws-main">
