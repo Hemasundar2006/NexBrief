@@ -30,6 +30,17 @@ const previewType = new URLSearchParams(window.location.search).get('preview');
 const previewMode = previewType === '1' || previewType === 'admin';
 const previewAdmin = previewType === 'admin';
 
+function WorkspaceLoadingScreen({ overlay = false, message = 'Opening your workspace…' }) {
+  return <div className={`ws-loading-screen ${overlay ? 'is-overlay' : ''}`} role="status" aria-live="polite" aria-label={message}>
+    <div className="ws-loading-mark" aria-hidden="true">
+      <span className="ws-loading-orbit">{Array.from({ length: 8 }, (_, index) => <i key={index} />)}</span>
+      <img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" />
+    </div>
+    <strong>{message}</strong>
+    <span className="ws-loading-progress" aria-hidden="true"><i /><i /><i /></span>
+  </div>;
+}
+
 export default function App() {
   const [page, setPage] = useState('Overview'), [railSection, setRailSection] = useState('overview'), [drawer, setDrawer] = useState(false), [user, setUser] = useState(null), [leads, setLeads] = useState([]), [proposals, setProposals] = useState([]), [activities, setActivities] = useState([]), [drafts, setDrafts] = useState([]), [selectedLead, setSelectedLead] = useState(''), [draft, setDraft] = useState(''), [draftKind, setDraftKind] = useState('outreach'), [search, setSearch] = useState(''), [leadDate, setLeadDate] = useState(''), [leadPage, setLeadPage] = useState(1), [dialog, setDialog] = useState(null), [toast, setToast] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [maintenanceAlert, setMaintenanceAlert] = useState(null), [signoutConfirm, setSignoutConfirm] = useState(null);
   const currency = user?.workspace?.currency || 'USD';
@@ -145,10 +156,11 @@ export default function App() {
   async function signOut() { if (!previewMode) { try { await api('/auth/logout', { method: 'POST' }); } catch { } } authToken.clear(); window.location.assign('/sign-in'); }
   const pageTitle = titleFor[page] || page;
   const pageDescriptions = { Overview: 'The important client work, all in one place.', Leads: 'Capture and organize the people interested in your services.', Qualification: 'Review fit, interest, service needs, and project value before investing time.', 'Follow-ups': 'See the next client conversations that need your attention.', Pipeline: 'See every opportunity from first contact to decision.', Proposals: 'Keep project scope and proposal status together.', Payments: 'Record deposit progress and see which projects are ready to start.', 'AI drafts': 'Write a considered first message. Review it before sending.', 'Outbound discovery': 'Find promising businesses by location and service, then save the right prospects to your pipeline.', 'Activity': 'A record of lead, proposal, and deposit changes.', 'Billing': 'Manage your NexBrief plan and billing status.', 'Usage': 'Track plan limits and workspace consumption.', 'Settings': 'Your workspace, preferences, and account access.' };
-  if (loading && !user) return <main className="ws-startup" aria-label="Loading NexBrief"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><p>Opening your workspace…</p></main>;
+  if (loading && !user) return <main className="ws-startup"><WorkspaceLoadingScreen /></main>;
   if (!user) { const isMaintenance = error && error.toLowerCase().includes('maintenance'); return <main className="ws-startup"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><h1>{isMaintenance ? 'Under maintenance' : 'Open NexBrief'}</h1><p>{error || 'Your client workspace is ready when you are.'}</p>{isMaintenance ? <span className="ws-maintenance-subnote">We are performing scheduled improvements. Please check back shortly.</span> : <a className="ws-button ws-primary" href="/sign-in">Go to sign in <ArrowRight size={16} /></a>}</main>; }
   if (user.platformOwner) return <MainAdminShell preview={previewMode} />;
-  return <div className="workspace" onKeyDown={event => { if (event.key === 'Escape') setDrawer(false); }}>
+  return <div className="workspace ws-content-reveal" onKeyDown={event => { if (event.key === 'Escape') setDrawer(false); }}>
+    {loading && <WorkspaceLoadingScreen overlay message="Syncing your workspace…" />}
     {drawer && <button className="ws-scrim" aria-label="Close navigation" onClick={() => setDrawer(false)} />}
     <aside className={`ws-sidebar ${drawer ? 'ws-sidebar-open' : ''}`} id="nexbrief-navigation">
       <div className="ws-icon-rail" aria-label="Workspace sections">
