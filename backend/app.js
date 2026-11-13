@@ -203,6 +203,10 @@ app.use("/api", async (req, res, next) => {
 });
 app.use("/api/auth", authRoutes);
 app.use("/api/platform", platformRoutes);
+// Public waitlist routes must be registered before any catch-all /api router
+// that installs requireAuth with router.use(). Admin and feedback routes still
+// enforce their own authentication inside waitlistRoutes.
+app.use("/api", waitlistRoutes);
 app.use("/api/paytm", paytmRoutes);
 app.use("/api", subscriptionRoutes);
 app.use("/api/leads", leadRoutes);
@@ -210,7 +214,6 @@ app.use("/api", journeyRoutes);
 app.use('/api',workflowRoutes);
 app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
-app.use("/api", waitlistRoutes);
 app.use("/api/growth", discoveryRoutes);
 
 app.use((req, res, next) => {
