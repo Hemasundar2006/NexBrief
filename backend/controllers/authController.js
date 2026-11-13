@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { z } from "zod";
+import { effectiveWorkspacePlan } from "../config/plans.js";
 import {
   ConsentModel,
   RefreshSessionModel,
@@ -24,7 +25,7 @@ import { getPlatformSettings } from "../services/platformSettingsService.js";
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().email(),
-  password: z.string().min(10).max(128),
+  password: z.string().min(12).max(128).regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/),
   profession: z
     .enum(["web-developer", "video-editor", "creative"])
     .default("creative"),
@@ -143,6 +144,8 @@ export async function login(req, res) {
         message: "Email or password is incorrect.",
       },
     });
+  if (user.status !== "active")
+    return res.status(403).json({ error: { code: "ACCOUNT_INACTIVE", message: "This account is not active." } });
   const settings = await getPlatformSettings();
   if (settings.maintenanceMode && !user.platformOwner) {
     return res.status(503).json({
@@ -199,6 +202,21 @@ export async function logoutAll(req, res) {
   clearRefreshCookie(res);
   res.status(204).end();
 }
+export async function changePassword(req, res) {
+  const parsed = z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(12).max(128).regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/, 'Use letters, numbers, and a symbol.') }).safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Use a new password of at least 12 characters with letters, numbers, and a symbol.' } });
+  const user = await UserModel.findById(req.user.id);
+  if (!user || user.status !== 'active') return res.status(401).json({ error: { code: 'UNAUTHORIZED' } });
+  if (!(await verifyPassword(parsed.data.currentPassword, user.passwordHash))) return res.status(403).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Current password is incorrect.' } });
+  if (await verifyPassword(parsed.data.newPassword, user.passwordHash)) return res.status(400).json({ error: { code: 'PASSWORD_REUSED', message: 'Choose a different password.' } });
+  user.passwordHash = await hashPassword(parsed.data.newPassword);
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
+  await user.save();
+  await RefreshSessionModel.updateMany({ userId: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+  clearRefreshCookie(res);
+  await audit(req, 'auth.password_changed', 'user', String(user._id));
+  res.status(204).end();
+}
 export async function me(req, res) {
   const user = await UserModel.findOne({ _id: req.user.id, deletedAt: null })
     .select("-passwordHash")
@@ -220,5 +238,9 @@ export async function me(req, res) {
     RoleModel.findOne({workspaceId:user.workspaceId,key:current.role,active:true}).select('permissions').lean(),
     WorkspaceModel.findById(user.workspaceId).select('name profession currency plan billingStatus retentionDays subscriptionId subscriptionStatus billingCycle subscriptionAmount subscriptionCurrency authorizationStatus mandateStatus activatedAt nextBillingDate expiresAt autoRenew').lean(),
   ]);
+  if (workspace && effectiveWorkspacePlan(workspace) === "free" && workspace.plan !== "free") {
+    await WorkspaceModel.updateOne({ _id: workspace._id, plan: workspace.plan }, { $set: { plan: "free", billingStatus: "past_due", autoRenew: false } });
+    workspace.plan = "free"; workspace.billingStatus = "past_due"; workspace.autoRenew = false;
+  }
   res.json({ data: {...current, permissions: current.role === 'platform-owner' ? [] : role?.permissions || [], workspace} });
 }

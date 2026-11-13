@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { builtInRoles, permissionCatalog } from "../config/roles.js";
-import { AuditModel, RoleModel, UserModel, WorkspaceModel } from "../models/index.js";
+import { AuditModel, RefreshSessionModel, RoleModel, UserModel, WorkspaceModel } from "../models/index.js";
 import { hashPassword } from "../middleware/auth.js";
 import { audit } from "../services/auditService.js";
 
@@ -19,7 +19,7 @@ const roleSchema = z.object({
 const userSchema = z.object({
   name: z.string().trim().min(2).max(100),
   email: z.string().email(),
-  password: z.string().min(10).max(128),
+  password: z.string().min(12).max(128).regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/),
   role: z.string().trim().toLowerCase().min(2).max(80),
   serviceRole: z
     .enum(["web-developer", "video-editor", "custom-service"])
@@ -258,7 +258,9 @@ export async function updateUser(req, res) {
   }
   if (value.data.serviceRole) user.serviceRole = value.data.serviceRole;
   if (value.data.status) user.status = value.data.status;
+  if (value.data.status === "suspended") user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
+  if (value.data.status === "suspended") await RefreshSessionModel.updateMany({ userId: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
   await audit(req, "user.update", "user", user.id, value.data);
   res.json({
     data: {

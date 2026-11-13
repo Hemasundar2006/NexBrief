@@ -19,6 +19,7 @@ const UserSchema = new Schema(
     },
     phone: { type: String, trim: true, maxlength: 20 },
     passwordHash: { type: String, required: true },
+    tokenVersion: { type: Number, default: 0 },
     workspaceId: { type: Schema.Types.ObjectId, required: true, index: true },
     role: { type: String, enum: ["owner", "member"], default: "member" },
     platformOwner: { type: Boolean, default: false },
@@ -399,12 +400,19 @@ const SubscriptionSchema = new Schema(
     cancelledAt: Date,
     cancellationReason: String,
     autoRenew: { type: Boolean, default: true },
+    checkoutLock: { type: Boolean, default: false },
+    pendingPlanId: String,
+    pendingBillingCycle: String,
+    pendingCashfreePlanId: String,
+    pendingCancel: { type: Boolean, default: false },
+    paidThrough: Date,
     lastPaymentAt: Date,
     lastPaymentStatus: String,
   },
   options,
 );
 SubscriptionSchema.index({ workspaceId: 1, subscriptionStatus: 1, createdAt: -1 });
+SubscriptionSchema.index({ workspaceId: 1 }, { unique: true, partialFilterExpression: { checkoutLock: true } });
 const SubscriptionTransactionSchema = new Schema(
   {
     workspaceId: { type: Schema.Types.ObjectId, ref: "Workspace", required: true, index: true },

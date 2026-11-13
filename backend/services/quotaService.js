@@ -4,7 +4,7 @@ import {
   WorkspaceModel,
   LeadModel,
 } from "../models/index.js";
-import { plans } from "../config/plans.js";
+import { effectiveWorkspacePlan, plans } from "../config/plans.js";
 
 function periodStart() {
   const now = new Date();
@@ -18,9 +18,9 @@ function reservationKey(req) {
 }
 export async function reserveQuota(req, feature, amount = 1) {
   const workspace = await WorkspaceModel.findById(req.user.workspaceId)
-    .select("plan")
+    .select("plan subscriptionId expiresAt")
     .lean();
-  const planName = workspace?.plan || "free";
+  const planName = effectiveWorkspacePlan(workspace);
   const limit = plans[planName]?.[feature] ?? plans.free[feature];
   const start = periodStart();
   const key = reservationKey(req);
@@ -103,9 +103,9 @@ export async function releaseQuota(reservationId) {
 export async function getUsage(workspaceId) {
   const start = periodStart();
   const workspace = await WorkspaceModel.findById(workspaceId)
-    .select("plan")
+    .select("plan subscriptionId expiresAt")
     .lean();
-  const planName = workspace?.plan || "free";
+  const planName = effectiveWorkspacePlan(workspace);
   const plan = plans[planName] || plans.free;
   const ledgers = await UsageLedgerModel.find({
     workspaceId,

@@ -6,7 +6,7 @@ import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errors.js';
 import { rateLimit } from '../middleware/security.js';
 import { LeadModel, ProposalModel, WorkspaceModel, UserModel } from '../models/index.js';
-import { plans } from '../config/plans.js';
+import { effectiveWorkspacePlan, plans } from '../config/plans.js';
 import { qualifyInquiry } from '../services/qualificationService.js';
 import {CaptureForm as Form,FollowSequence as Sequence,ProposalShare as Share,JourneySettings} from '../models/journey.js';
 import {queueMail,integrationStatus} from '../services/journeyService.js';
@@ -17,12 +17,14 @@ const roleServices={
  'web-developer':['Website development','Website redesign','Landing page','Portfolio website','Website refresh','E-commerce website'],
  'video-editor':['Video editing','Short-form video','YouTube editing','Podcast editing','Reels and social clips','Motion graphics'],
 };
+const allowedServices = role => roleServices[role] || null;
 const input=z.object({name:z.string().trim().min(2).max(120),email:z.string().trim().email().max(254).transform(v=>v.toLowerCase()),phone:z.string().max(40).default(''),deadline:z.string().date().optional().or(z.literal('')),company:z.string().trim().max(160).default(''),service:z.string().trim().min(2).max(160),value:z.number().nonnegative().max(10000000),notes:z.string().trim().min(20).max(10000),consent:z.literal(true),website:z.string().max(0).optional(),submissionId:z.string().uuid()});
 router.get('/public/forms/:token',rateLimit(60),wrap(async(req,res)=>{
  const form=await Form.findOne({token:req.params.token,enabled:true});
  if(!form)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
- const workspace=await WorkspaceModel.findById(form.workspaceId).select('name currency');
- res.json({data:{name:workspace?.name,currency:workspace?.currency||'USD',title:form.title,description:form.description,services:form.services}});
+ const workspace=await WorkspaceModel.findById(form.workspaceId).select('name currency profession');
+ const permitted=allowedServices(workspace?.profession);
+ res.json({data:{name:workspace?.name,currency:workspace?.currency||'USD',title:form.title,description:form.description,services:permitted ? form.services.filter(service=>permitted.includes(service)) : form.services}});
 }));
 router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
  const parsed=input.safeParse(req.body);
@@ -33,13 +35,13 @@ router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
  const owner=workspace&&await UserModel.findOne({_id:workspace.ownerId,status:'active',deletedAt:null});
  if(!owner)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
  const p=parsed.data,qualification=qualifyInquiry(p);
- if(!form.services.includes(p.service))return res.status(400).json({error:{message:'Choose an available service.'}});
+ if(!form.services.includes(p.service) || (allowedServices(workspace.profession) && !allowedServices(workspace.profession).includes(p.service)))return res.status(400).json({error:{message:'Choose an available service.'}});
  let lead;
  await mongoose.connection.transaction(async session=>{
   await WorkspaceModel.updateOne({_id:workspace._id},{$set:{updatedAt:new Date()}},{session});
   lead=await LeadModel.findOne({workspaceId:workspace._id,captureId:p.submissionId}).session(session);if(lead)return;
   const count=await LeadModel.countDocuments({workspaceId:workspace._id,archivedAt:null}).session(session);
-  if(count>=(plans[workspace.plan]||plans.free).storedLeads)throw Object.assign(new Error('This form cannot accept more inquiries right now.'),{status:409});
+  if(count>=(plans[effectiveWorkspacePlan(workspace)]||plans.free).storedLeads)throw Object.assign(new Error('This form cannot accept more inquiries right now.'),{status:409});
   [lead]=await LeadModel.create([{workspaceId:workspace._id,captureId:p.submissionId,name:p.name,email:p.email,phone:p.phone,deadline:p.deadline||undefined,company:p.company||p.name,service:p.service,value:p.value,currency:workspace.currency,notes:p.notes,contactConsentAt:new Date(),source:'Public inquiry form',qualification,qualificationScore:qualification.score,interest:qualification.interest,nextAction:qualification.nextAction,nextActionAt:new Date()}],{session});
  });
  if(form.notify)await queueMail({workspaceId:workspace._id,key:`inquiry-${lead._id}`,to:owner.email,subject:'A new inquiry arrived in NexBrief',text:'A client submitted your inquiry form. Open your workspace to review it.',dueAt:new Date()});
@@ -93,12 +95,19 @@ router.post('/journey/proposals/:id/share',requirePermission('proposals:write'),
 }));
 router.get('/journey/form',wrap(async(req,res)=>{
  const workspace=await WorkspaceModel.findById(req.user.workspaceId).select('profession');
- const services=roleServices[req.user.serviceRole]||roleServices[workspace?.profession]||['Custom service','Creative consultation','Content production'];
+ const services=roleServices[workspace?.profession]||roleServices[req.user.serviceRole]||['Custom service','Creative consultation','Content production'];
  const data=await Form.findOneAndUpdate({workspaceId:req.user.workspaceId},{$setOnInsert:{token:randomBytes(24).toString('hex'),services}},{upsert:true,new:true});
+ if (roleServices[workspace?.profession]) {
+  const filtered=data.services.filter(service=>services.includes(service));
+  if (filtered.length !== data.services.length || !filtered.length) { data.services=filtered.length ? filtered : services; await data.save(); }
+ }
  res.json({data});
 }));
 router.patch('/journey/form',wrap(async(req,res)=>{
  const value=z.object({enabled:z.boolean().optional(),title:z.string().trim().min(2).max(120).optional(),description:z.string().max(1000).optional(),services:z.array(z.string().trim().min(2).max(160)).min(1).max(20).optional(),notify:z.boolean().optional()}).parse(req.body);
+ const workspace=await WorkspaceModel.findById(req.user.workspaceId).select('profession').lean();
+ const permitted=allowedServices(workspace?.profession);
+ if (permitted && value.services?.some(service=>!permitted.includes(service))) return res.status(400).json({error:{message:'Choose services for your account role.'}});
  const data=await Form.findOneAndUpdate({workspaceId:req.user.workspaceId},{$set:value},{new:true});res.json({data});
 }));
 router.post('/journey/qualify/:id',wrap(async(req,res)=>{

@@ -10,7 +10,8 @@
     "server:check": "node --check backend/server.js",
     "build": "vite build --config frontend/vite.config.js",
     "preview": "vite preview --config frontend/vite.config.js",
-    "ai:check": "node --check ai-service/ai.js"
+    "ai:check": "node --check ai-service/ai.js",
+    "test:security": "node --test backend/tests/security.test.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

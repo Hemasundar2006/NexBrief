@@ -1,11 +1,8 @@
-// Use the local Vite proxy during development and the deployed Render API in production.
-const API_URL=import.meta.env.VITE_API_URL||(
-  import.meta.env.PROD
-    ? 'https://nexbrief-n6bu.onrender.com/api'
-    : '/api'
-);
-const tokenKey='nexbrief_access_token';
-export const authToken={get:()=>localStorage.getItem(tokenKey),set:token=>localStorage.setItem(tokenKey,token),clear:()=>localStorage.removeItem(tokenKey)};
+// Both the Vite development server and Vercel proxy /api to the backend.
+const API_URL='/api';
+let accessToken=null;
+localStorage.removeItem('nexbrief_access_token');
+export const authToken={get:()=>accessToken,set:token=>{accessToken=token},clear:()=>{accessToken=null}};
 let refreshPromise;
 async function refreshSession(){if(!refreshPromise)refreshPromise=fetch(`${API_URL}/auth/refresh`,{method:'POST',credentials:'include'}).then(async response=>{if(!response.ok){authToken.clear();return false}const body=await response.json();authToken.set(body.data.accessToken);return true}).catch(()=>false).finally(()=>{refreshPromise=null});return refreshPromise}
 export async function api(path,options={}){const request=()=>{const token=authToken.get();return fetch(`${API_URL}${path}`,{...options,credentials:'include',headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{ }),...(options.headers||{})}})};let response=await request();if(response.status===401&&(path==='/auth/me'||!path.startsWith('/auth/'))&&await refreshSession())response=await request();if(response.status===204)return;const body=await response.json().catch(()=>({error:{message:'Invalid server response'}}));if(!response.ok){if(response.status===503&&(body?.error?.code==='PLATFORM_MAINTENANCE'||String(body?.error?.message||'').toLowerCase().includes('maintenance'))){if(typeof window!=='undefined'){window.dispatchEvent(new CustomEvent('nexbrief:maintenance',{detail:{message:body?.error?.message}}));}}const error=new Error(body?.error?.message||body?.error?.code||`Request failed: ${response.status}`);error.status=response.status;error.code=body?.error?.code;throw error}return body}

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   login,
+  changePassword,
   logout,
   logoutAll,
   me,
@@ -17,5 +18,6 @@ router.post("/login", rateLimit(12, 900000), asyncHandler(login));
 router.post("/refresh", rateLimit(60, 900000), asyncHandler(refresh));
 router.post("/logout", rateLimit(30, 900000), asyncHandler(logout));
 router.post("/logout-all", requireAuth, asyncHandler(logoutAll));
+router.post("/change-password", requireAuth, rateLimit(5, 900000), asyncHandler(changePassword));
 router.get("/me", requireAuth, asyncHandler(me));
 export default router;

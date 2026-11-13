@@ -26,6 +26,7 @@ async function cashfreeRequest(path, options = {}) {
 }
 export function createCashfreeSubscription(payload) { return cashfreeRequest("/subscriptions", { method: "POST", body: JSON.stringify(payload) }); }
 export function fetchCashfreeSubscription(subscriptionId) { return cashfreeRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}`, { method: "GET" }); }
+export function fetchCashfreeSubscriptionPayment(subscriptionId, paymentId) { return cashfreeRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}/payments/${encodeURIComponent(paymentId)}`, { method: "GET" }); }
 export function manageCashfreeSubscription(subscriptionId, action, actionDetails = {}) { return cashfreeRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}/manage`, { method: "POST", body: JSON.stringify({ subscription_id: subscriptionId, action, action_details: actionDetails }) }); }
 
 export function verifyCashfreeWebhook(rawBody, signature, timestamp) {

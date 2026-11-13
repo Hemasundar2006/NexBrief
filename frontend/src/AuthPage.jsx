@@ -61,7 +61,7 @@ export default function AuthPage({ mode = 'signup' }) {
         )}
         {signup && <label>Your name<input name="name" autoComplete="name" placeholder="Alex Morgan" minLength="2" maxLength="100" required/></label>}
         <label>Email address<input name="email" type="email" autoComplete="email" placeholder="you@example.com" required/></label>
-        <label>Password<input name="password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} minLength={signup ? 10 : 1} maxLength="128" placeholder={signup ? 'At least 10 characters' : 'Your password'} required/></label>
+        <label>Password<input name="password" type="password" autoComplete={signup ? 'new-password' : 'current-password'} minLength={signup ? 12 : 1} maxLength="128" placeholder={signup ? '12+ characters with letters, numbers & a symbol' : 'Your password'} required/></label>
         {signup && <label>What best describes your work?<select name="profession" defaultValue="web-developer"><option value="web-developer">Freelance web developer</option><option value="video-editor">Freelance video editor</option><option value="creative">Another creative service</option></select></label>}
         {signup && <div className="auth-consents"><label><input type="checkbox" name="serviceConsent" required/><span>I agree to the <a href="#terms">Terms</a> and <a href="#privacy">Privacy Policy</a>.</span></label><label><input type="checkbox" name="aiConsent"/><span>Allow AI to help draft outreach and follow-ups. (Optional)</span></label></div>}
         {error && <p className="auth-error" role="alert">{error}</p>}

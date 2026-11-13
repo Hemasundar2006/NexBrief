@@ -41,6 +41,10 @@ export function getPlan(planId, billingCycle = "MONTHLY") {
   const cycle = String(billingCycle).toUpperCase() === "YEARLY" ? "YEARLY" : "MONTHLY";
   return { ...plan, billingCycle: cycle, amount: cycle === "YEARLY" ? plan.yearlyAmount : plan.monthlyAmount };
 }
+export function effectiveWorkspacePlan(workspace) {
+  if (workspace?.subscriptionId && workspace.expiresAt && new Date(workspace.expiresAt) <= new Date()) return "free";
+  return workspace?.plan || "free";
+}
 
 export function publicPlans() {
   return Object.values(planCatalog).map(({ limits, ...plan }) => ({ ...plan, features: plan.features, limits }));

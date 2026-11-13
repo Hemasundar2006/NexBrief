@@ -77,6 +77,7 @@ export function issueAccessToken(user) {
     workspaceId: String(user.workspaceId),
     role: accessRole,
     serviceRole: user.serviceRole || "custom-service",
+    tokenVersion: user.tokenVersion || 0,
     iat: now,
     exp: now + accessTtlSeconds,
     jti: randomBytes(16).toString("hex"),
@@ -129,7 +130,7 @@ export async function rotateRefreshSession(raw, req, res) {
     _id: session.userId,
     deletedAt: null,
   }).lean();
-  if (!user) return null;
+  if (!user || user.status !== "active") return null;
   await createRefreshSession(user, req, res);
   return user;
 }
@@ -168,9 +169,9 @@ export async function requireAuth(req, res, next) {
       workspaceId: claims.workspaceId,
       deletedAt: null,
     })
-      .select("status accessRole role serviceRole platformOwner")
+      .select("status accessRole role serviceRole platformOwner tokenVersion")
       .lean();
-    if (!user || user.status === "suspended")
+    if (!user || user.status !== "active" || (user.tokenVersion || 0) !== (claims.tokenVersion || 0))
       return res.status(401).json({
         error: {
           code: "ACCOUNT_INACTIVE",
