@@ -25,7 +25,8 @@ const pricingPlans = [
     name: 'Pro',
     label: 'FOR GROWING FREELANCERS',
     description: 'More support for a growing freelance business.',
-    price: 1,
+    price: 99,
+    yearlyPrice: 1100,
     features: [
       'Everything in Free',
       'AI-assisted outreach drafts',
@@ -36,7 +37,8 @@ const pricingPlans = [
     name: 'Plus',
     label: 'FOR HIGH-VOLUME CLIENT WORK',
     description: 'More room for active pipelines and consistent outreach.',
-    price: 1,
+    price: 199,
+    yearlyPrice: 2300,
     featured: true,
     features: [
       'Everything in Pro',
@@ -54,7 +56,7 @@ const pricingFaqs = [
   ],
   [
     'What payment methods are supported for paid plans?',
-    'Currently, during verification mode, plans are priced at ₹1 for testing. Full checkout with UPI, cards, and netbanking will be available soon.',
+    'Pro is ₹99 monthly or ₹1,100 yearly. Plus is ₹199 monthly or ₹2,300 yearly. Recurring checkout is handled securely through Cashfree.',
   ],
   [
     'Does NexBrief take a cut of my client payments or deposits?',

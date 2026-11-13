@@ -13,13 +13,13 @@ export const planCatalog = {
   },
   pro: {
     id: "pro", name: "Pro", monthlyAmount: amount("CASHFREE_PRO_MONTHLY_AMOUNT", 99),
-    yearlyAmount: amount("CASHFREE_PRO_YEARLY_AMOUNT", 99), currency: "INR",
+    yearlyAmount: amount("CASHFREE_PRO_YEARLY_AMOUNT", 1100), currency: "INR",
     limits: { discoveries: 500, audits: 100, outreach: 200, storedLeads: 1000 },
     features: ["1,000 stored leads", "200 AI drafts", "100 website audits", "500 discoveries"],
   },
   plus: {
     id: "plus", name: "Plus", monthlyAmount: amount("CASHFREE_PLUS_MONTHLY_AMOUNT", 199),
-    yearlyAmount: amount("CASHFREE_PLUS_YEARLY_AMOUNT", 199), currency: "INR",
+    yearlyAmount: amount("CASHFREE_PLUS_YEARLY_AMOUNT", 2300), currency: "INR",
     limits: { discoveries: 2000, audits: 500, outreach: 1000, storedLeads: 5000 },
     features: ["5,000 stored leads", "1,000 AI drafts", "500 website audits", "2,000 discoveries"],
   },
