@@ -12,7 +12,7 @@ if (rawPath.startsWith('/proposal/')) {
 } else if (rawPath.startsWith('/client/')) {
   Page = lazy(() => import('./ClientPortalPageV2.jsx'));
 } else if (rawPath === "/" || rawPath === "") {
-  Page = lazy(() => import("./LandingPage.jsx"));
+  Page = lazy(() => import("./LandingEntry.jsx"));
 } else if (rawPath === "/features") {
   Page = lazy(() => import("./FeaturesPage.jsx"));
 } else if (rawPath === "/how-it-works" || rawPath === "/how") {
