@@ -9,6 +9,12 @@ export async function connectDatabase() {
     serverSelectionTimeoutMS: 5000,
   });
   ready = true;
+  mongoose.connection.on("connected", () => {
+    ready = true;
+  });
+  mongoose.connection.on("reconnected", () => {
+    ready = true;
+  });
   mongoose.connection.on("disconnected", () => {
     ready = false;
   });

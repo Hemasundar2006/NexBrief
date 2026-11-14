@@ -37,6 +37,8 @@ const allowedOrigins = new Set(
   "https://www.nexbrief.in",
   "https://nexbrief.in",
   "https://app.nexbrief.in",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
 ].forEach((origin) => allowedOrigins.add(origin));
 app.use(securityHeaders);
 app.use(
@@ -45,7 +47,9 @@ app.use(
       if (!origin) return callback(null, true);
       const normalized = origin.trim().replace(/\/+$/, "");
       if (allowedOrigins.has(normalized)) return callback(null, true);
-      return callback(new Error("CORS origin is not allowed."));
+      const error = new Error("CORS origin is not allowed.");
+      error.status = 403;
+      return callback(error);
     },
     credentials: true,
   }),

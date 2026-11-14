@@ -36,19 +36,19 @@ export function LeadForm({lead, currency, serviceRole='custom-service', onSave})
       <label>Email<input name="email" type="email" defaultValue={lead?.email} placeholder="taylor@example.com"/></label>
       <label>Phone<input name="phone" maxLength={40} defaultValue={lead?.phone} placeholder="Optional"/></label>
       <label>Service<select name="service" required defaultValue={lead?.service||services[0]}>{services.map(service=><option key={service}>{service}</option>)}</select></label>
-      <label>Source<input name="source" maxLength={80} defaultValue={lead?.source} placeholder="Referral, website, social…"/></label>
+      <label>How did they find you?<input name="source" maxLength={80} defaultValue={lead?.source} placeholder="Referral, website, Instagram…"/></label>
       <label>Estimated project value<input name="value" type="number" min="0" step="0.01" required defaultValue={lead?.value || 0}/></label>
       <label>Currency<select name="currency" defaultValue={lead?.currency || currency || 'USD'}>{['USD','INR','EUR','GBP','CAD','AUD'].map(value=><option key={value}>{value}</option>)}</select></label>
-      <label>Interest<select name="interest" defaultValue={lead?.interest || 'Warm'}>{['Hot','Warm','Cold'].map(value=><option key={value}>{value}</option>)}</select></label>
-      <label>Sales stage<select name="stage" defaultValue={lead?.stage || 'New lead'}>{stages.map(value=><option key={value}>{value}</option>)}</select></label>
-      <label>Qualification score (0–100)<input name="qualificationScore" type="number" min="0" max="100" step="1" defaultValue={lead?.qualificationScore || 0}/></label>
-      <label>Next follow-up<input name="nextActionAt" type="datetime-local" defaultValue={localDateInput(lead?.nextActionAt)}/></label>
+      <label>Interest level<select name="interest" defaultValue={lead?.interest || 'Warm'}>{['Hot','Warm','Cold'].map(value=><option key={value}>{value}</option>)}</select></label>
+      <label>Current step<select name="stage" defaultValue={lead?.stage || 'New lead'}>{stages.map(value=><option key={value}>{value}</option>)}</select></label>
+      <label>How suitable is this client? (0–100)<input name="qualificationScore" type="number" min="0" max="100" step="1" defaultValue={lead?.qualificationScore || 0}/></label>
+      <label>Follow-up date and time<input name="nextActionAt" type="datetime-local" defaultValue={localDateInput(lead?.nextActionAt)}/></label>
     </div>
     <label>Website<input name="website" type="url" defaultValue={lead?.website} placeholder="https://example.com"/></label>
-    <label>Next action<input name="nextAction" maxLength={240} defaultValue={lead?.nextAction || 'Qualify this lead'}/></label>
+    <label>What should you do next?<input name="nextAction" maxLength={240} defaultValue={lead?.nextAction || 'Review this client request'}/></label>
     <label>Client notes<textarea name="notes" maxLength={10000} rows={3} defaultValue={lead?.notes} placeholder="Their goals, budget, timeline, and what you discussed."/></label>
     {error&&<p className="ws-error" role="alert">{error}</p>}
-    <button className="ws-button ws-primary" disabled={busy}>{busy?'Saving…':lead?'Save changes':'Save lead'}<ArrowRight size={16}/></button>
+    <button className="ws-button ws-primary" disabled={busy}>{busy?'Saving…':lead?'Save changes':'Save client'}<ArrowRight size={16}/></button>
   </form>;
 }
 
@@ -63,12 +63,12 @@ export function ProposalForm({leads, currency, onSave}) {
     setBusy(true);try{await onSave(data);}catch(error){setError(error.message);}finally{setBusy(false);}
   }
   return <form className="ws-form" onSubmit={submit}>
-    <label>Client<select name="leadId" required defaultValue=""><option value="" disabled>Select a lead</option>{leads.map(lead=><option value={lead.id} key={lead.id}>{lead.company} · {lead.name}</option>)}</select></label>
+    <label>Client<select name="leadId" required defaultValue=""><option value="" disabled>Choose a client</option>{leads.map(lead=><option value={lead.id} key={lead.id}>{lead.company} · {lead.name}</option>)}</select></label>
     <label>Proposal title<input autoFocus required minLength={2} maxLength={200} name="title" placeholder="Website redesign & launch"/></label>
     <label>Scope summary<textarea name="summary" maxLength={10000} rows={3} placeholder="What will you create for this client?"/></label>
     <label>Deliverables<textarea name="deliverables" rows={3} placeholder="One deliverable per line"/></label>
     <div className="ws-form-grid"><label>Project amount<input name="amount" type="number" min="0.01" step="0.01" required/></label><label>Deposit amount<input name="deposit" type="number" min="0" step="0.01" defaultValue={0} required/></label><label>Currency<select name="currency" defaultValue={currency || 'USD'}>{['USD','INR','EUR','GBP','CAD','AUD'].map(value=><option key={value}>{value}</option>)}</select></label><label>Timeline<input name="timeline" required minLength={2} maxLength={500} placeholder="3 weeks from deposit"/></label></div>
-    <p className="ws-muted">Saves a proposal record. Email delivery and online payment collection are not connected.</p>
+    <p className="ws-muted">This saves the proposal in NexBrief. It does not email the client or collect payment automatically.</p>
     {error&&<p className="ws-error" role="alert">{error}</p>}
     <button className="ws-button ws-primary" disabled={busy || !leads.length}>{busy?'Saving…':'Create proposal'}<ArrowRight size={16}/></button>
   </form>;

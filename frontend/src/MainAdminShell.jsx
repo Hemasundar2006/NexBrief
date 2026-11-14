@@ -78,14 +78,14 @@ function Maintenance({preview}){
 
   return <section className="main-admin-page">
     <span className="platform-detail-kicker">PLATFORM SETTINGS</span>
-    <h1>Maintenance modes</h1>
-    <p>Control platform-wide availability and notices without opening any member CRM data.</p>
+    <h1>Temporarily limit access</h1>
+    <p>Show a maintenance message or pause new sign-ups. These controls do not open any member’s private client work.</p>
     {toast && <div className="main-admin-toast" role="status"><Check size={16}/> {toast}</div>}
     
     <div className="main-admin-setting">
       <span>
         <strong>Platform maintenance</strong>
-        <small>Show a maintenance notice to member workspaces while you update NexBrief. Platform admin access remains active.</small>
+        <small>Temporarily stop members from opening their workspace while NexBrief is being updated. Main Admin stays available.</small>
       </span>
       <button
         type="button"
@@ -101,7 +101,7 @@ function Maintenance({preview}){
     <div className="main-admin-setting">
       <span>
         <strong>New registrations</strong>
-        <small>Temporarily pause new member account registrations during platform updates.</small>
+        <small>Stop people from creating new accounts. Existing members can still sign in unless maintenance mode is also on.</small>
       </span>
       <button
         type="button"
@@ -117,7 +117,7 @@ function Maintenance({preview}){
     <form className="main-admin-setting-notice" onSubmit={saveNotice}>
       <label>
         <strong>Custom maintenance notice</strong>
-        <small>Message displayed to visitors and members when maintenance is active.</small>
+        <small>This message appears when maintenance mode is on.</small>
         <textarea
           rows={3}
           value={notice}
@@ -158,8 +158,8 @@ function OwnerActivity({preview}){
 
   return <section className="main-admin-page">
     <span className="platform-detail-kicker">OWNER ACTIVITY</span>
-    <h1>Platform activity</h1>
-    <p>Administrative events recorded for platform status, maintenance modes, and member account updates.</p>
+    <h1>Admin changes</h1>
+    <p>See changes made to member access, maintenance settings, and platform availability.</p>
     {activities.length > 0 ? (
       <div className="admin-table">
         <div className="admin-table-head">
@@ -188,7 +188,7 @@ function OwnerActivity({preview}){
 }
 
 const limits={free:[20,5,10,20],pro:[500,100,200,1000],plus:[2000,500,1000,5000]};
-function AdminUsage({preview}){const [members,setMembers]=useState(preview?[{name:'Alex Morgan',workspace:{plan:'free'}},{name:'Casey Rivera',workspace:{plan:'pro'}},{name:'Jordan Lee',workspace:{plan:'plus'}}]:[]);useEffect(()=>{if(!preview)api('/platform/overview').then(result=>setMembers(result.data||[])).catch(()=>{})},[preview]);return <section className="main-admin-page"><span className="platform-detail-kicker">USAGE OVERSIGHT</span><h1>Usage across NexBrief.</h1><p>Review plan limits and account-level consumption. Private leads, messages, proposals, and payments are never loaded here.</p><div className="admin-usage-summary"><article><TrendingUp size={18}/><span>Accounts tracked</span><strong>{members.length||'—'}</strong></article><article><span>Plus accounts</span><strong>{members.filter(item=>(item.workspace?.plan||'free')==='plus').length||'0'}</strong></article><article><span>Plan limits</span><strong>4</strong><small>tracked categories</small></article></div><div className="admin-table"><div className="admin-table-head"><span>Member</span><span>Plan</span><span>Discoveries</span><span>AI drafts</span><span>Stored leads</span></div>{members.map(member=>{const plan=member.workspace?.plan||'free';const [discoveries,audits,outreach,stored]=limits[plan]||limits.free;return <div className="admin-table-row" key={member.id||member.name}><strong>{member.name}</strong><span className={`ws-plan-badge ws-plan-${plan}`}>{plan}</span><span>0 / {discoveries.toLocaleString()}</span><span>0 / {outreach.toLocaleString()}</span><span>0 / {stored.toLocaleString()}</span></div>})}</div><div className="main-admin-note"><ShieldCheck size={18}/><span>Usage totals are metadata only. Detailed CRM content remains private to each member workspace.</span></div></section>}
+function AdminUsage({preview}){const [members,setMembers]=useState(preview?[{name:'Alex Morgan',workspace:{plan:'free'}},{name:'Casey Rivera',workspace:{plan:'pro'}},{name:'Jordan Lee',workspace:{plan:'plus'}}]:[]);useEffect(()=>{if(!preview)api('/platform/overview').then(result=>setMembers(result.data||[])).catch(()=>{})},[preview]);return <section className="main-admin-page"><span className="platform-detail-kicker">PLAN LIMITS</span><h1>Member usage</h1><p>See how much of each plan limit a member has used. You cannot open their client names, messages, proposals, or payments.</p><div className="admin-usage-summary"><article><TrendingUp size={18}/><span>Accounts shown</span><strong>{members.length||'—'}</strong></article><article><span>Plus plan accounts</span><strong>{members.filter(item=>(item.workspace?.plan||'free')==='plus').length||'0'}</strong></article><article><span>Limits measured</span><strong>4</strong><small>types of usage</small></article></div><div className="admin-table"><div className="admin-table-head"><span>Member</span><span>Plan</span><span>Businesses found</span><span>AI message drafts</span><span>Saved clients</span></div>{members.map(member=>{const plan=member.workspace?.plan||'free';const [discoveries,audits,outreach,stored]=limits[plan]||limits.free;return <div className="admin-table-row" key={member.id||member.name}><strong>{member.name}</strong><span className={`ws-plan-badge ws-plan-${plan}`}>{plan}</span><span>0 / {discoveries.toLocaleString()}</span><span>0 / {outreach.toLocaleString()}</span><span>0 / {stored.toLocaleString()}</span></div>})}</div><div className="main-admin-note"><ShieldCheck size={18}/><span>Only usage numbers are shown here. Each member’s client work stays private.</span></div></section>}
 
 export default function MainAdminShell({preview=false}){
   const [view,setView]=useState('members');
