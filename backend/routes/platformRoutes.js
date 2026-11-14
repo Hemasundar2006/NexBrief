@@ -6,6 +6,7 @@ import { asyncHandler } from "../middleware/errors.js";
 import { audit } from "../services/auditService.js";
 import { listAdminBilling } from "../controllers/paytmController.js";
 import {integrationStatus} from '../services/journeyService.js';
+import {sendManualProAccessEmail} from '../services/smtpService.js';
 import {MailJob,CaptureForm,ServiceTemplate,FollowSequence} from '../models/journey.js';
 import {
   getPlatformSettings,
@@ -73,5 +74,8 @@ router.patch("/members/:id", asyncHandler(async (req, res) => {
   }).catch(() => {});
   res.json({data:{id:String(member._id),name:member.name,email:member.email,status:member.status,role:member.accessRole,serviceRole:member.serviceRole,lastLoginAt:member.lastLoginAt,createdAt:member.createdAt}});
 }));
+
+router.get('/members',asyncHandler(async(_req,res)=>{const rows=await UserModel.find({platformOwner:{$ne:true},deletedAt:null}).select('name email workspaceId accessRole serviceRole status lastLoginAt createdAt').sort({createdAt:-1}).lean();const workspaces=await WorkspaceModel.find({_id:{$in:rows.map(row=>row.workspaceId)}}).select('name plan billingStatus expiresAt').lean();const map=new Map(workspaces.map(row=>[String(row._id),row]));res.json({data:rows.map(row=>({...row,id:String(row._id),workspace:map.get(String(row.workspaceId))||null}))});}));
+router.patch('/members/:id/pro',asyncHandler(async(req,res)=>{const value=z.object({days:z.number().int().min(1).max(90).default(14)}).parse(req.body||{});const member=await UserModel.findOne({_id:req.params.id,platformOwner:{$ne:true},deletedAt:null}).lean();if(!member)return res.status(404).json({error:{code:'MEMBER_NOT_FOUND'}});const expiresAt=new Date(Date.now()+value.days*86400000);const workspace=await WorkspaceModel.findByIdAndUpdate(member.workspaceId,{$set:{plan:'pro',billingStatus:'active',subscriptionStatus:'ADMIN_GRANT',expiresAt,autoRenew:false}},{new:true}).lean();await audit(req,'platform.member.pro_grant','member',String(member._id),{email:member.email,days:value.days,expiresAt}).catch(()=>{});let emailSent=false;try{await sendManualProAccessEmail({to:member.email,name:member.name,expiresAt});emailSent=true;}catch{}res.json({data:{memberId:String(member._id),plan:workspace.plan,expiresAt},emailSent});}));
 
 export default router;

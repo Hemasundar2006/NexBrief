@@ -126,7 +126,14 @@ export async function register(req, res) {
   req.user = current;
   await createRefreshSession(user, req, res);
   await audit(req, "auth.register", "user", current.id);
-  sendWelcomeEmail({ to: email, name: value.name, plan: beta ? 'pro' : 'free', expiresAt: beta?.betaAccessUntil }).catch(() => {});
+  sendWelcomeEmail({ to: email, name: value.name, plan: beta ? 'pro' : 'free', expiresAt: beta?.betaAccessUntil }).catch((error) => {
+    // Email delivery must not block account creation, but keep a safe diagnostic in Render logs.
+    console.error('[welcome-email] delivery failed', {
+      code: error?.code || 'SMTP_ERROR',
+      message: error?.message || 'Unknown SMTP error',
+      recipient: email,
+    });
+  });
   res.status(201).json({
     data: {
       user: current,
