@@ -54,6 +54,12 @@ const tourSteps = [
   { page: 'Service templates', label: 'Save services you offer often', text: 'Save the price, work included, timeline, revisions, and deposit for reuse.' },
   { page: 'Proposals', label: 'Create a clear proposal', text: 'Add the work, price, timeline, and deposit, then track the client’s decision.' },
   { page: 'Deposits & payments', label: 'Track client payments', text: 'Record deposits and see when a project is ready to begin.' },
+  { page: 'Projects', label: 'Turn approval into delivery', text: 'Create a project after approval and keep the client, budget, dates, and delivery stage together.' },
+  { page: 'Tasks', label: 'Know what to do today', text: 'Track tasks by status, priority, due date, and whether you are waiting for the client.' },
+  { page: 'Invoices', label: 'Collect the final payment', text: 'Create a project invoice, set a due date, and update it when the final payment arrives.' },
+  { page: 'Reviews', label: 'Turn finished work into proof', text: 'Request a review through the secure client portal after delivery and payment.' },
+  { page: 'Billing', label: 'Understand your plan limits', text: 'Compare Free, Pro, and Plus access, see your billing cycle, and upgrade when you need more room.' },
+  { page: 'Usage', label: 'Watch your usage', text: 'See leads, drafts, discoveries, audits, projects, invoices, and other limits before you reach them.' },
 ];
 
 function WorkspaceTour({ open, onNavigate, onFinish }) {
