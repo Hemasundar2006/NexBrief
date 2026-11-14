@@ -34,7 +34,7 @@ export default function AuthPage({ mode = 'signup' }) {
           })
         : await clientFlowApi.login(form.get('email'), form.get('password'));
       authToken.set(result.data.accessToken);
-      window.location.assign('/app');
+      window.location.assign(window.location.hostname.startsWith('app.') ? '/' : 'https://app.nexbrief.in/');
     } catch (err) {
       setError(err.message || 'We couldn’t complete that request. Please try again.');
       setBusy(false);

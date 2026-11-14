@@ -4,6 +4,7 @@ import { FeedbackModel, UserModel, WaitlistModel } from '../models/index.js';
 import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errors.js';
 import { rateLimit } from '../middleware/security.js';
+import { sendBetaAccessEmail } from '../services/smtpService.js';
 
 const router = Router();
 const waitlistSchema = z.object({ name: z.string().trim().min(2).max(120), email: z.string().trim().email().max(254), profession: z.enum(['web-developer', 'video-editor', 'creative']), monthlyClientVolume: z.string().trim().min(1).max(80), currentMethod: z.string().trim().min(2).max(160), heardFrom: z.string().trim().min(2).max(160), expectedUse: z.string().trim().min(2).max(1000), consent: z.literal(true) });
@@ -42,12 +43,15 @@ router.patch('/admin/waitlist/:id', requireAuth, asyncHandler(async (req, res) =
   if (!req.user.platformOwner) return res.status(403).json({ error: { code: 'PLATFORM_OWNER_REQUIRED' } });
   const action = z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional(), grantProDays: z.number().int().min(1).max(90).optional() }).safeParse(req.body);
   if (!action.success) return res.status(400).json({ error: { code: 'VALIDATION_ERROR' } });
+  const existing = await WaitlistModel.findById(req.params.id).lean();
+  if (!existing) return res.status(404).json({ error: { code: 'WAITLIST_ENTRY_NOT_FOUND' } });
   const update = { reviewedAt: new Date(), reviewedBy: req.user.id };
+  let shouldEmail = false;
   if (action.data.status) update.status = action.data.status;
-  if (action.data.grantProDays) { update.proGrantedAt = new Date(); update.betaAccessUntil = new Date(Date.now() + action.data.grantProDays * 86400000); update.status = 'approved'; }
+  if (action.data.grantProDays) { update.proGrantedAt = existing.proGrantedAt || new Date(); update.betaAccessUntil = existing.betaAccessUntil || new Date(Date.now() + action.data.grantProDays * 86400000); update.status = 'approved'; shouldEmail = !existing.proGrantedAt; }
   const row = await WaitlistModel.findByIdAndUpdate(req.params.id, { $set: update }, { new: true }).lean();
-  if (!row) return res.status(404).json({ error: { code: 'WAITLIST_ENTRY_NOT_FOUND' } });
-  res.json({ data: row });
+  if (shouldEmail) { try { await sendBetaAccessEmail({to:row.email,name:row.name,expiresAt:row.betaAccessUntil}); } catch (error) { return res.json({ data: row, warning: error.code === 'SMTP_NOT_CONFIGURED' ? 'Pro access was granted, but SMTP is not configured, so the email was not sent.' : 'Pro access was granted, but the access email could not be sent.' }); } }
+  res.json({ data: row, emailSent: shouldEmail });
 }));
 router.get('/admin/feedback', requireAuth, asyncHandler(async (req, res) => {
   if (!req.user.platformOwner) return res.status(403).json({ error: { code: 'PLATFORM_OWNER_REQUIRED' } });
