@@ -21,3 +21,9 @@
 @media(max-width:800px){.admin-usage-summary,.admin-billing-summary{grid-template-columns:1fr}.admin-table{overflow-x:auto}.admin-table-head,.admin-table-row{min-width:700px}}
 @media(max-width:700px){.main-admin-shell{grid-template-columns:1fr}.main-admin-nav{box-shadow:none}.main-admin-nav button.is-active{box-shadow:none}.platform-content{padding:20px 16px}}
  .admin-table .ws-plan-badge{float:none;display:inline-block;margin:0;padding:5px 10px;white-space:nowrap}
+
+@media(max-width:700px){
+ .main-admin-view>.platform-shell,.main-admin-view>.platform-shell>.platform-main{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+ .admin-table{max-width:100%;overscroll-behavior-inline:contain;-webkit-overflow-scrolling:touch}
+ .admin-table-head,.admin-table-row{min-width:640px}
+}

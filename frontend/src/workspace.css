@@ -367,6 +367,37 @@ body:has(.workspace){min-width:320px!important;overflow:hidden;background:#f8f8f
 @media(max-width:520px){.ws-preview-banner{align-items:flex-start;flex-direction:column;gap:8px;margin-bottom:18px}.ws-preview-banner>a{flex:0 1 auto}}
 @media(prefers-reduced-motion:reduce){.workspace *,.workspace *::before,.workspace *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
+/* Phone layout: keep every workspace screen readable without horizontal page overflow. */
+@media(max-width:600px){
+ body:has(.workspace){width:100%;min-width:320px!important;overflow-x:hidden!important}
+ .workspace,.ws-main,.ws-page,.ws-page-detail{width:100%;max-width:100%;min-width:0}
+ .ws-topbar{padding-inline:14px}
+ .ws-top-user{gap:7px}.ws-status{display:none}
+ .ws-preview-banner{max-width:100%;overflow:hidden}.ws-preview-actions{width:100%;gap:12px}
+ .ws-heading h1{font-size:27px;overflow-wrap:anywhere}.ws-heading>div{min-width:0}
+ .ws-heading-actions{display:grid;grid-template-columns:1fr 1fr}.ws-heading-actions>.ws-button{width:100%}
+ .ws-metrics{grid-template-columns:1fr;gap:10px}
+ .ws-metric{padding:15px}.ws-metric>strong{font-size:25px;white-space:normal;overflow-wrap:anywhere}
+ .ws-overview-grid,.ws-lower-row{grid-template-columns:1fr}
+ .ws-card{padding:16px}.ws-section-header,.ws-card-toolbar{align-items:flex-start;flex-wrap:wrap}
+ .ws-section-header>button{flex:0 0 auto}.ws-card-toolbar>.ws-search{width:100%}
+ .ws-stage-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .ws-lead-row{align-items:flex-start;flex-wrap:wrap}.ws-lead-row-main{flex-basis:calc(100% - 46px)}
+ .ws-lead-row>.ws-interest{margin-left:41px}.ws-lead-stage{max-width:42%}.ws-lead-actions{margin-left:auto}
+ .ws-proposal-heading{align-items:flex-start;flex-wrap:wrap}.ws-proposal-amount{margin-left:41px}
+ .ws-proposal-data{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .ws-ai-controls{align-items:stretch;flex-direction:column}.ws-ai-controls .ws-button{width:100%}
+ .ws-draft-footer{align-items:flex-start;flex-direction:column}
+ .ws-discovery{padding:24px 18px}.ws-discovery-grid{grid-template-columns:1fr}
+ .ws-settings-form .ws-form-grid,.ws-form-grid{grid-template-columns:1fr}
+ .ws-dialog{width:calc(100% - 20px);max-height:calc(100dvh - 20px);border-radius:12px}.ws-dialog-body{padding:18px}
+ .ws-pagination{align-items:flex-start;flex-direction:column}
+ .ws-toast{right:12px;bottom:12px;left:12px;max-width:none}
+ .ws-tour-card{right:10px;bottom:10px;left:10px;width:auto;max-height:calc(100dvh - 20px);padding:18px;overflow-y:auto}
+ .ws-tour-icon{margin-top:14px}.ws-tour-dots{margin:15px 0}.ws-tour-actions button{min-height:42px}
+ .workspace.ws-tour-active .ws-sidebar:not(.ws-sidebar-open){width:100vw;transform:translateX(-105%);box-shadow:none}
+}
+
 /* Platform Maintenance Active Modal */
 .ws-maintenance-modal-backdrop {
   position: fixed;

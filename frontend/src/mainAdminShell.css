@@ -13,3 +13,35 @@
 .main-admin-nav-actions{margin-top:auto;padding-top:14px}
 .main-admin-signout-btn{width:100%;border:1px solid #fee2e2!important;background:#fff5f5!important;color:#dc2626!important;border-radius:10px!important;padding:11px 13px!important;font-weight:650!important;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s ease,border-color .15s ease}
 .main-admin-signout-btn:hover{background:#fee2e2!important;border-color:#fca5a5!important;color:#b91c1c!important}
+
+@media(max-width:700px){
+ .main-admin-shell,.main-admin-view{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+ .main-admin-nav{grid-template-columns:repeat(2,minmax(0,1fr));padding:16px;gap:7px;border-right:0;border-bottom:1px solid #e5e5e2}
+ .main-admin-nav-brand{grid-column:1/-1;margin:0 0 10px;font-size:17px}
+ .main-admin-nav-label{grid-column:1/-1;margin:8px 0 2px}
+ .main-admin-nav button{min-width:0;min-height:42px;padding:10px 9px;font-size:10px;line-height:1.25}
+ .main-admin-nav button svg{flex:0 0 auto}
+ .main-admin-nav-actions{grid-column:1/-1;margin-top:6px;padding-top:8px}
+ .main-admin-signout-btn{width:100%!important;justify-content:center}
+ .main-admin-page{width:100%;max-width:100%;padding:28px 16px;overflow:hidden}
+ .main-admin-page h1{font-size:34px;line-height:1.03;overflow-wrap:anywhere}
+ .main-admin-setting,.main-admin-setting-notice{padding:17px}
+}
+
+/* Main Admin phone layout */
+@media(max-width:700px){
+ .main-admin-view>.platform-shell,.main-admin-view>.platform-shell>.platform-main,.main-admin-view .platform-content{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+ .platform-top{height:52px;gap:10px;padding:0 16px}.platform-owner-tag{padding:7px 9px;white-space:nowrap}
+ .platform-preview{align-items:flex-start;flex-direction:column;overflow:hidden}.platform-preview a{max-width:100%;white-space:normal}
+ .platform-heading{margin:20px 0 22px}.platform-heading h1{font-size:36px;line-height:1.03;overflow-wrap:anywhere}.platform-heading p{font-size:13px}
+ .platform-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.platform-metrics article{min-width:0;min-height:118px;padding:15px}.platform-metrics strong{font-size:25px}
+ .platform-directory{max-width:100%;overflow:hidden}.platform-directory-header{align-items:stretch;flex-direction:column;padding:18px}.platform-directory-header label{min-width:0;width:100%}
+ .platform-account-list{min-height:0;padding:8px;border-right:0;border-bottom:1px solid #eee}.platform-account-list>button{min-width:0;padding:11px 9px}.platform-account-list>button>svg{flex:0 0 auto}.platform-account-list>button b{display:none}
+ .platform-account-detail{padding:19px}.platform-account-detail h3{font-size:21px;overflow-wrap:anywhere}
+ .platform-account-detail dl>div{align-items:flex-start;flex-direction:column;gap:5px}.platform-account-detail dd{max-width:100%;text-align:left}
+ .waitlist-admin{margin:16px;padding:18px;border-radius:14px;overflow:hidden}
+ .waitlist-admin-heading h2{font-size:25px;overflow-wrap:anywhere}.waitlist-admin-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.waitlist-admin-metrics span{min-width:0}
+ .waitlist-admin-list article{align-items:flex-start}.main-admin-beta-nav{grid-template-columns:1fr}.main-admin-beta-nav span{grid-column:1}.main-admin-beta-nav a{align-items:center;justify-content:flex-start;flex-direction:row;text-align:left;font-size:12px}
+}
+
+@media(max-width:390px){.platform-metrics{grid-template-columns:1fr}}
