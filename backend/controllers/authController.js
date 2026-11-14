@@ -22,6 +22,7 @@ import {
 import { audit } from "../services/auditService.js";
 import { seedWorkspaceRoles } from "../services/roleService.js";
 import { getPlatformSettings } from "../services/platformSettingsService.js";
+import { sendWelcomeEmail } from "../services/smtpService.js";
 
 const registerSchema = z.object({
   name: z.string().trim().min(2).max(100),
@@ -125,6 +126,7 @@ export async function register(req, res) {
   req.user = current;
   await createRefreshSession(user, req, res);
   await audit(req, "auth.register", "user", current.id);
+  sendWelcomeEmail({ to: email, name: value.name, plan: beta ? 'pro' : 'free', expiresAt: beta?.betaAccessUntil }).catch(() => {});
   res.status(201).json({
     data: {
       user: current,
