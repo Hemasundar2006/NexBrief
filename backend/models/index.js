@@ -95,6 +95,7 @@ const LeadSchema = new Schema(
     captureId: String,
     qualification: Schema.Types.Mixed,
     notes: { type: String, maxlength: 1e4 },
+    customFields: { type: Schema.Types.Mixed, default: {} },
     tags: [{ type: String, trim: true, maxlength: 40 }],
     archivedAt: Date,
   },
@@ -476,6 +477,9 @@ const WebsiteAuditModel =
 const UsageLedgerModel =
   mongoose.models.UsageLedger ||
   mongoose.model("UsageLedger", UsageLedgerSchema);
+// UsageCounter is the application-facing name for the monthly usage ledger.
+// Keeping the existing collection preserves current quota data.
+const UsageCounterModel = UsageLedgerModel;
 const QuotaReservationModel =
   mongoose.models.QuotaReservation ||
   mongoose.model("QuotaReservation", QuotaReservationSchema);
@@ -550,6 +554,7 @@ export {
   DiscoveredBusinessModel,
   WebsiteAuditModel,
   UsageLedgerModel,
+  UsageCounterModel,
   QuotaReservationModel,
   OutreachDraftModel,
   BillingTransactionModel,

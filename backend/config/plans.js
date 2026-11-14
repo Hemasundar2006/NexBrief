@@ -8,20 +8,20 @@ const amount = (key, fallback = 1) => {
 export const planCatalog = {
   free: {
     id: "free", name: "Free", monthlyAmount: 0, yearlyAmount: 0, currency: "INR",
-    limits: { discoveries: 20, audits: 5, outreach: 10, storedLeads: 20 },
-    features: ["20 stored leads", "10 AI drafts", "5 website audits", "20 discoveries"],
+    limits: { discoveries: 20, audits: 5, outreach: 10, storedLeads: 20, clients: 5, proposals: 5, activeProjects: 2, tasks: 50, storageBytes: 262144000, portals: 1, invoices: 5, reviews: 5 },
+    features: ["20 leads", "10 AI drafts", "5 website audits", "2 active projects", "250 MB file storage"],
   },
   pro: {
     id: "pro", name: "Pro", monthlyAmount: amount("CASHFREE_PRO_MONTHLY_AMOUNT", 99),
     yearlyAmount: amount("CASHFREE_PRO_YEARLY_AMOUNT", 1100), currency: "INR",
-    limits: { discoveries: 500, audits: 100, outreach: 200, storedLeads: 1000 },
-    features: ["1,000 stored leads", "200 AI drafts", "100 website audits", "500 discoveries"],
+    limits: { discoveries: 500, audits: 100, outreach: 200, storedLeads: 1000, clients: 30, proposals: 30, activeProjects: 10, tasks: 300, storageBytes: 2147483648, portals: 10, invoices: 50, reviews: 30 },
+    features: ["1,000 leads", "200 AI drafts", "100 website audits", "10 active projects", "2 GB file storage"],
   },
   plus: {
     id: "plus", name: "Plus", monthlyAmount: amount("CASHFREE_PLUS_MONTHLY_AMOUNT", 199),
     yearlyAmount: amount("CASHFREE_PLUS_YEARLY_AMOUNT", 2300), currency: "INR",
-    limits: { discoveries: 2000, audits: 500, outreach: 1000, storedLeads: 5000 },
-    features: ["5,000 stored leads", "1,000 AI drafts", "500 website audits", "2,000 discoveries"],
+    limits: { discoveries: 2000, audits: 500, outreach: 1000, storedLeads: 5000, clients:  null, proposals: null, activeProjects: null, tasks: null, storageBytes: 10737418240, portals: null, invoices: null, reviews: null },
+    features: ["5,000 leads", "1,000 AI drafts", "Unlimited projects and proposals", "10 GB file storage"],
   },
 };
 

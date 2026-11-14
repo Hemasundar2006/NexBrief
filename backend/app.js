@@ -13,6 +13,10 @@ import platformRoutes from "./routes/platformRoutes.js";
 import paytmRoutes from "./routes/paytmRoutes.js";
 import journeyRoutes from "./routes/journeyRoutes.js";
 import workflowRoutes from './routes/workflowRoutes.js';
+import portalRoutes from './routes/portalRoutes.js';
+import publicInvoiceRoutes from './routes/publicInvoiceRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import invoiceRoutes from './routes/invoiceRoutes.js';
 import subscriptionRoutes from "./routes/subscriptionRoutes.js";
 import {
   getPlatformSettings,
@@ -214,8 +218,16 @@ app.use("/api", waitlistRoutes);
 app.use("/api/paytm", paytmRoutes);
 app.use("/api", subscriptionRoutes);
 app.use("/api/leads", leadRoutes);
+import clientRoutes from "./routes/clientRoutes.js";
+import projectRoutes from "./routes/projectRoutes.js";
+app.use("/api/clients", clientRoutes);
+app.use("/api/projects", projectRoutes);
 app.use("/api", journeyRoutes);
 app.use('/api',workflowRoutes);
+app.use('/api',portalRoutes);
+app.use('/api',publicInvoiceRoutes);
+app.use('/api/reviews',reviewRoutes);
+app.use('/api/invoices',invoiceRoutes);
 app.use("/api", salesRoutes);
 app.use("/api/privacy", privacyRoutes);
 app.use("/api/growth", discoveryRoutes);

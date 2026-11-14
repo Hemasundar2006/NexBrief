@@ -4,7 +4,7 @@ import {api} from './api';
 import './memberAccountPages.css';
 import './billing-overrides.css';
 
-const limits={free:{discoveries:20,audits:5,outreach:10,storedLeads:20},pro:{discoveries:500,audits:100,outreach:200,storedLeads:1000},plus:{discoveries:2000,audits:500,outreach:1000,storedLeads:5000}};
+const limits={free:{discoveries:20,audits:5,outreach:10,storedLeads:20,clients:5,proposals:5,activeProjects:2,invoices:5},pro:{discoveries:500,audits:100,outreach:200,storedLeads:1000,clients:30,proposals:30,activeProjects:10,invoices:50},plus:{discoveries:2000,audits:500,outreach:1000,storedLeads:5000,clients:null,proposals:null,activeProjects:null,invoices:null}};
 const labels={discoveries:'Businesses found',audits:'Website checks',outreach:'AI message drafts',storedLeads:'Saved clients'};
 const planName=plan=>({free:'Free',pro:'Pro',plus:'Plus'}[plan]||'Free');
 

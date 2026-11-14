@@ -1,0 +1,11 @@
+import {Router} from 'express';
+import {z} from 'zod';
+import {requireAuth,requirePermission} from '../middleware/auth.js';
+import {asyncHandler} from '../middleware/errors.js';
+import {ClientPortal,Project,Review} from '../models/journey.js';
+const router=Router(),scope=req=>({workspaceId:req.user.workspaceId});
+router.use(requireAuth,requirePermission('leads:read'));
+router.get('/',asyncHandler(async(req,res)=>res.json({data:await Review.find(scope(req)).sort({createdAt:-1}).lean()})));
+router.post('/projects/:id/request',requirePermission('leads:write'),asyncHandler(async(req,res)=>{const project=await Project.findOne({...scope(req),_id:req.params.id});if(!project)return res.sendStatus(404);const data=await Review.findOneAndUpdate({...scope(req),projectId:project._id,clientId:project.clientId},{$set:{status:'requested'}},{upsert:true,new:true,setDefaultsOnInsert:true});res.json({data});}));
+router.post('/public/:token',asyncHandler(async(req,res)=>{const value=z.object({rating:z.number().int().min(1).max(5),comment:z.string().trim().min(2).max(2000)}).parse(req.body);const portal=await ClientPortal.findOne({token:req.params.token,active:true}).lean();if(!portal)return res.status(404).json({error:{message:'This client portal link is unavailable.'}});const project=await Project.findOne({_id:portal.projectId,workspaceId:portal.workspaceId});if(!project)return res.sendStatus(404);const data=await Review.findOneAndUpdate({workspaceId:portal.workspaceId,projectId:project._id,clientId:project.clientId},{$set:{status:'submitted',rating:value.rating,comment:value.comment,submittedAt:new Date()}},{upsert:true,new:true,setDefaultsOnInsert:true});res.json({data});}));
+export default router;

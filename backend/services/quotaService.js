@@ -22,6 +22,7 @@ export async function reserveQuota(req, feature, amount = 1) {
     .lean();
   const planName = effectiveWorkspacePlan(workspace);
   const limit = plans[planName]?.[feature] ?? plans.free[feature];
+  if (limit == null) return { reservation: { _id: null }, planName, limit: null, unlimited: true };
   const start = periodStart();
   const key = reservationKey(req);
   let existing = await QuotaReservationModel.findOne({
@@ -113,11 +114,8 @@ export async function getUsage(workspaceId) {
   }).lean();
   const storedLeads = await LeadModel.countDocuments({ workspaceId, archivedAt: null });
   const data = {};
-  for (const [feature, limit] of Object.entries({
-    discoveries: plan.discoveries,
-    audits: plan.audits,
-    outreach: plan.outreach,
-  })) {
+  for (const [feature, limit] of Object.entries({discoveries:plan.discoveries,audits:plan.audits,outreach:plan.outreach,leads:plan.storedLeads,clients:plan.clients,proposals:plan.proposals,activeProjects:plan.activeProjects,tasks:plan.tasks,invoices:plan.invoices,reviews:plan.reviews})) {
+    if (limit == null) { data[feature] = {used:0,reserved:0,limit:null,remaining:null}; continue; }
     const row = ledgers.find((item) => item.feature === feature);
     data[feature] = {
       used: row?.used || 0,

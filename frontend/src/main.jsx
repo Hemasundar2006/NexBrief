@@ -9,6 +9,8 @@ if (rawPath.startsWith('/proposal/')) {
   Page = lazy(() => import('./ClientProposalPage.jsx'));
 } else if (rawPath.startsWith('/inquiry/')) {
   Page = lazy(() => import('./InquiryPage.jsx'));
+} else if (rawPath.startsWith('/client/')) {
+  Page = lazy(() => import('./ClientPortalPageV2.jsx'));
 } else if (rawPath === "/" || rawPath === "") {
   Page = lazy(() => import("./LandingPage.jsx"));
 } else if (rawPath === "/features") {

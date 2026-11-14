@@ -1,0 +1,2 @@
+import {reserveQuota,confirmQuota,releaseQuota} from '../services/quotaService.js';
+export function checkUsage(feature,amount=1){return async(req,res,next)=>{try{const quota=await reserveQuota(req,feature,amount);if(!quota)return res.status(402).json({error:{code:'USAGE_LIMIT_REACHED',message:`Your plan limit for ${feature} has been reached.`,feature,limit:quota?.limit||0}});await confirmQuota(quota.reservation._id);req.usageQuota=quota;next();}catch(error){next(error);}};}

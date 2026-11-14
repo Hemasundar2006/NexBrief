@@ -21,6 +21,7 @@ import './planCard.css';
 const navGroups = [
   { id: 'overview', title: 'Overview', Icon: LayoutDashboard, caption: 'Your important client work in one place.', links: [['Overview', 'leads:read']] },
   { id: 'journey', title: 'Client work', Icon: BriefcaseBusiness, caption: 'Manage a client from first contact to payment.', links: [['Capture leads', 'leads:read'], ['Qualify leads', 'leads:read'], ['Follow-ups', 'leads:read'], ['Sales pipeline', 'pipeline:read'], ['AI outreach', 'outreach:generate'], ['Proposals', 'proposals:read'], ['Deposits & payments', 'payments:read'], ['Service templates', 'proposals:write'], ['Analytics', 'leads:read']] },
+  { id: 'clients', title: 'Clients', Icon: Users, caption: 'Keep every won client and their history together.', links: [['Clients', 'leads:read'], ['Projects', 'leads:read'], ['Tasks', 'leads:read'], ['Invoices', 'payments:read'], ['Reviews', 'leads:read']] },
   { id: 'settings', title: 'Account', Icon: Settings, caption: 'Manage your plan, limits, settings, and privacy.', links: [['Billing', null], ['Usage', null], ['Settings', 'workspace:manage'], ['Integrations', 'workspace:manage']] },
   { id: 'growth', title: 'Coming soon', Icon: MapPinned, caption: 'Finding new businesses will be available later.', links: [['Outbound discovery', null]] },
 ];
@@ -63,8 +64,8 @@ function WorkspaceTour({ open, onNavigate, onFinish }) {
     if (!open) return undefined;
     onNavigate(tourSteps[step].page);
     const update = () => {
-      const main = document.querySelector('.ws-main');
-      if (window.matchMedia('(max-width: 760px)').matches) main?.scrollTo({ top: 0, behavior: 'smooth' });
+      // Keep the tour transition still: changing steps should not move the
+      // page or the sidebar underneath the card.
       const target = document.querySelector('.ws-nav-item[aria-current="page"]') || document.querySelector('.ws-heading');
       if (!target) return setSpotlight(null);
       const rect = target.getBoundingClientRect();
@@ -95,7 +96,7 @@ function WorkspaceTour({ open, onNavigate, onFinish }) {
 }
 
 export default function App() {
-  const [page, setPage] = useState('Overview'), [railSection, setRailSection] = useState('overview'), [drawer, setDrawer] = useState(false), [user, setUser] = useState(null), [leads, setLeads] = useState([]), [proposals, setProposals] = useState([]), [activities, setActivities] = useState([]), [drafts, setDrafts] = useState([]), [selectedLead, setSelectedLead] = useState(''), [draft, setDraft] = useState(''), [draftKind, setDraftKind] = useState('outreach'), [search, setSearch] = useState(''), [leadDate, setLeadDate] = useState(''), [leadPage, setLeadPage] = useState(1), [dialog, setDialog] = useState(null), [toast, setToast] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [maintenanceAlert, setMaintenanceAlert] = useState(null), [signoutConfirm, setSignoutConfirm] = useState(null);
+  const [page, setPage] = useState('Overview'), [railSection, setRailSection] = useState('overview'), [drawer, setDrawer] = useState(false), [user, setUser] = useState(null), [leads, setLeads] = useState([]), [clients, setClients] = useState([]), [proposals, setProposals] = useState([]), [activities, setActivities] = useState([]), [drafts, setDrafts] = useState([]), [selectedLead, setSelectedLead] = useState(''), [draft, setDraft] = useState(''), [draftKind, setDraftKind] = useState('outreach'), [search, setSearch] = useState(''), [leadDate, setLeadDate] = useState(''), [leadPage, setLeadPage] = useState(1), [dialog, setDialog] = useState(null), [toast, setToast] = useState(''), [error, setError] = useState(''), [loading, setLoading] = useState(true), [busy, setBusy] = useState(false), [maintenanceAlert, setMaintenanceAlert] = useState(null), [signoutConfirm, setSignoutConfirm] = useState(null);
   const currency = user?.workspace?.currency || 'USD';
   const [tourOpen, setTourOpen] = useState(false);
   const serviceRole = user?.serviceRole || user?.workspace?.profession || 'custom-service';
@@ -111,13 +112,14 @@ export default function App() {
       const account = initial ? await api('/auth/me') : { data: user };
       const access = account?.data || user;
       if (account?.data) setUser(account.data);
-      const [leadResult, proposalResult, draftResult] = await Promise.all([can(access, 'leads:read') ? api('/leads?limit=100&page=1') : Promise.resolve({ data: [], meta: { total: 0 } }), can(access, 'proposals:read') ? api('/proposals') : Promise.resolve({ data: [] }), can(access, 'outreach:generate') ? api('/ai/drafts') : Promise.resolve({ data: [] })]);
+      const [leadResult, proposalResult, draftResult, clientResult] = await Promise.all([can(access, 'leads:read') ? api('/leads?limit=100&page=1') : Promise.resolve({ data: [], meta: { total: 0 } }), can(access, 'proposals:read') ? api('/proposals') : Promise.resolve({ data: [] }), can(access, 'outreach:generate') ? api('/ai/drafts') : Promise.resolve({ data: [] }), can(access, 'leads:read') ? api('/clients') : Promise.resolve({ data: [] })]);
       const leadPages = Math.ceil((leadResult.meta?.total || 0) / 100);
       const remaining = await Promise.all(Array.from({ length: Math.max(0, leadPages - 1) }, (_, index) => api(`/leads?limit=100&page=${index + 2}`)));
       const visibleLeads=scopedLeads([leadResult, ...remaining].flatMap(page => page.data || []).map(lead => ({ ...lead, id: String(lead._id || lead.id) })), access?.serviceRole || access?.workspace?.profession || 'custom-service');
       setLeads(visibleLeads);
       setProposals((proposalResult.data || []).map(item => ({ ...item, id: String(item._id || item.id), leadId: String(item.leadId) })).filter(item=>visibleLeads.some(lead=>lead.id===item.leadId)));
       setDrafts(draftResult.data || []);
+      setClients(clientResult.data || []);
     } catch (problem) { setError(problem.status === 401 ? 'Your session has expired. Sign in again to open your workspace.' : problem.message || 'Could not load your workspace. Check your connection and try again.'); }
     finally { setLoading(false); }
   }, [user]);
@@ -217,7 +219,7 @@ export default function App() {
   async function setPayment(p, status) { if (previewMode) { setToast('Sample data is read only. Sign in to update deposits.'); return; } await mutate(() => api('/payments/manual', { method: 'POST', body: JSON.stringify({ proposalId: p.id, status }) })); }
   async function signOut() { if (!previewMode) { try { await api('/auth/logout', { method: 'POST' }); } catch { } } authToken.clear(); window.location.assign('/sign-in'); }
   const pageTitle = displayTitleFor[page] || titleFor[page] || page;
-  const pageDescriptions = { Overview: 'See the client work that needs your attention.', Leads: 'Add and manage people who may become clients.', Qualification: 'Check the client’s needs, budget, interest, and project value.', 'Follow-ups': 'See who needs a reply and when to contact them.', Pipeline: 'See the current step for every client.', Proposals: 'Create proposals and track each client’s decision.', Payments: 'Record deposits and see which projects can begin.', 'AI drafts': 'Get help writing a message, then review it before sending.', 'Outbound discovery': 'Find businesses by place and service, then save the useful results.', 'Activity': 'See recent changes to clients, proposals, and payments.', 'Billing': 'View your plan, subscription, and payment details.', 'Usage': 'See how much of each plan limit you have used.', 'Settings': 'Manage your workspace, privacy choices, and account security.' };
+  const pageDescriptions = { Overview: 'See the client work that needs your attention.', Leads: 'Add and manage people who may become clients.', Clients: 'Keep every won client, project request, payment, and note together.', Qualification: 'Check the client’s needs, budget, interest, and project value.', 'Follow-ups': 'See who needs a reply and when to contact them.', Pipeline: 'See the current step for every client.', Proposals: 'Create proposals and track each client’s decision.', Payments: 'Record deposits and see which projects can begin.', 'AI drafts': 'Get help writing a message, then review it before sending.', 'Outbound discovery': 'Find businesses by place and service, then save the useful results.', 'Activity': 'See recent changes to clients, proposals, and payments.', 'Billing': 'View your plan, subscription, and payment details.', 'Usage': 'See how much of each plan limit you have used.', 'Settings': 'Manage your workspace, privacy choices, and account security.' };
   if (loading && !user) return <main className="ws-startup"><WorkspaceLoadingScreen /></main>;
   if (!user) { const isMaintenance = error && error.toLowerCase().includes('maintenance'); return <main className="ws-startup"><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /><h1>{isMaintenance ? 'Under maintenance' : 'Open NexBrief'}</h1><p>{error || 'Your client workspace is ready when you are.'}</p>{isMaintenance ? <span className="ws-maintenance-subnote">We are performing scheduled improvements. Please check back shortly.</span> : <a className="ws-button ws-primary" href="/sign-in">Go to sign in <ArrowRight size={16} /></a>}</main>; }
   if (user.platformOwner) return <MainAdminShell preview={previewMode} />;
@@ -234,7 +236,7 @@ export default function App() {
       <div className="ws-icon-rail" aria-label="Workspace sections">
         <button type="button" className="ws-rail-brand" aria-label="NexBrief overview" onClick={() => go('Overview')}><img className="nexbrief-logo-mark" src="/images/nexbrief-logo.png" alt="" aria-hidden="true" /></button>
         <span className="ws-rail-rule" />
-        {sidebarGroups.filter(group => ['overview', 'journey', 'settings', 'growth'].includes(group.id)).map(group => { const GroupIcon = group.Icon; const selected = railSection === group.id; return <button key={group.id} className={`ws-rail-button ${selected ? 'is-selected' : ''}`} aria-label={group.title} aria-pressed={selected} title={group.title} onClick={() => go(group.links[0][0])}><GroupIcon size={18} /></button>; })}
+        {sidebarGroups.filter(group => ['overview', 'journey', 'clients', 'settings', 'growth'].includes(group.id)).map(group => { const GroupIcon = group.Icon; const selected = railSection === group.id; return <button key={group.id} className={`ws-rail-button ${selected ? 'is-selected' : ''}`} aria-label={group.title} aria-pressed={selected} title={group.title} onClick={() => go(group.links[0][0])}><GroupIcon size={18} /></button>; })}
         <div className="ws-rail-bottom"><span className={`ws-rail-avatar ${hasPremiumPlan ? 'ws-premium-avatar' : ''}`} title={`${user?.name || 'Your account'}${hasPremiumPlan ? ` · ${user?.workspace?.plan} plan` : ''}`}>{initials(user?.name)}</span><button type="button" className="ws-rail-button" aria-label="Sign out" title="Sign out" onClick={() => setSignoutConfirm({ countdown: 10 })}><LogOut size={17} /></button></div>
       </div>
       <div className="ws-nav-panel">
@@ -246,7 +248,7 @@ export default function App() {
           const visible = label === 'Overview' || label === 'Outbound discovery' || label === 'Settings' || ['Service templates', 'Analytics', 'Integrations'].includes(label) || can(user, permission);
           if (!visible) return null;
           const step = stepNumbers[label];
-          const ItemIcon = { 'Overview': LayoutDashboard, 'Capture leads': Users, 'Qualify leads': ShieldCheck, 'Follow-ups': Clock3, 'Sales pipeline': BriefcaseBusiness, 'AI outreach': Sparkles, 'Proposals': FileText, 'Deposits & payments': WalletCards, 'Service templates': PackageOpen, 'Analytics': BarChart3, 'Activity': Activity, 'Settings': Settings, 'Integrations': PlugZap, 'Outbound discovery': MapPinned }[label] || group.Icon;
+          const ItemIcon = { 'Overview': LayoutDashboard, 'Capture leads': Users, 'Qualify leads': ShieldCheck, 'Follow-ups': Clock3, 'Sales pipeline': BriefcaseBusiness, 'Clients': Users, 'Projects': BriefcaseBusiness, 'Tasks': Check, 'Invoices': FileText, 'Reviews': Check, 'AI outreach': Sparkles, 'Proposals': FileText, 'Deposits & payments': WalletCards, 'Service templates': PackageOpen, 'Analytics': BarChart3, 'Activity': Activity, 'Settings': Settings, 'Integrations': PlugZap, 'Outbound discovery': MapPinned }[label] || group.Icon;
           return <button key={label} className={`ws-nav-item ${page === target ? 'is-active' : ''}`} aria-current={page === target ? 'page' : undefined} onClick={() => go(label)}><ItemIcon size={17} /><span>{displayTitleFor[target] || target}</span>{step && <span className="ws-flow-number">{step}</span>}{label === 'Capture leads' && leads.length > 0 && <span className="ws-count">{leads.length}</span>}{label === 'Outbound discovery' && <span className="ws-soon">Soon</span>}</button>;
         })}</nav>)}
         <div className="ws-sidebar-bottom"><button type="button" className="ws-tour-restart" onClick={() => { setDrawer(false); setTourOpen(true); }}><Route size={15} />Workspace tour</button><span className="ws-sidebar-foot">NEXBRIEF CRM</span><button type="button" className="ws-mobile-signout" onClick={() => setSignoutConfirm({ countdown: 10 })}><LogOut size={17} />Sign out</button></div>
