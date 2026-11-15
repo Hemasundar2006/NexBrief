@@ -21,6 +21,22 @@ export default function LandingFooter() {
             and independent creatives.
           </p>
           <small>From first inquiry to paid deposit.</small>
+          <a
+            className="product-hunt-card"
+            href="https://www.producthunt.com/products/nexbrief?embed=true&utm_source=embed&utm_medium=post_embed"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://ph-files.imgix.net/29c8ed4a-d34f-4a46-9223-d0ddf5e6bfbe.png?auto=compress,format&codec=mozjpeg&cs=strip&fit=crop&h=80&w=80"
+              alt="NexBrief"
+            />
+            <span>
+              <strong>NexBrief</strong>
+              <small>Turn Freelance Leads into Paid Projects</small>
+            </span>
+            <b>Check it out on Product Hunt <ArrowRight size={13} /></b>
+          </a>
         </div>
         <div className="rd-footer-links">
           <div>
