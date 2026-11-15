@@ -19,6 +19,8 @@ if (rawPath.startsWith('/proposal/')) {
   Page = lazy(() => import("./HowItWorksPage.jsx"));
 } else if (rawPath === "/pricing") {
   Page = lazy(() => import("./PricingPage.jsx"));
+} else if (rawPath === "/waitlist") {
+  Page = lazy(() => import("./WaitlistPage.jsx"));
 } else if (rawPath === "/testimonials") {
   Page = lazy(() => import("./TestimonialsPage.jsx"));
 } else if (rawPath === "/founder") {

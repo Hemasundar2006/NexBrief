@@ -20,6 +20,7 @@ export default function LandingNav({ active = '' }) {
     { label: 'Pricing', href: '/pricing', id: 'pricing' },
     { label: 'Testimonials', href: '/testimonials', id: 'testimonials' },
     { label: 'Founder', href: '/founder', id: 'founder' },
+    { label: 'Waitlist', href: '/waitlist', id: 'waitlist' },
   ];
 
   return (

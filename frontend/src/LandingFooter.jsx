@@ -2,9 +2,9 @@ import { ArrowRight } from 'lucide-react';
 import './logo.css';
 import WaitlistSection from './WaitlistSection.jsx';
 
-export default function LandingFooter() {
+export default function LandingFooter({ includeWaitlist = true }) {
   return (
-    <><WaitlistSection /><footer className="rd-footer">
+    <>{includeWaitlist && <WaitlistSection />}<footer className="rd-footer">
       <div className="rd-footer-main">
         <div className="rd-footer-brand">
           <a className="rd-footer-logo" href="/" aria-label="NexBrief home">
@@ -44,6 +44,7 @@ export default function LandingFooter() {
             <a href="/features">Features</a>
             <a href="/how-it-works">How it works</a>
             <a href="/pricing">Pricing</a>
+            <a href="/waitlist">Join the waitlist</a>
           </div>
           <div>
             <b>About NexBrief</b>
