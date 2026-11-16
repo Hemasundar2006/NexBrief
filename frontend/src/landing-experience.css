@@ -70,6 +70,40 @@
 .rd-footer-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.rd-footer-links>div{display:flex;flex-direction:column;align-items:flex-start;gap:12px}.rd-footer-links b{margin-bottom:4px;color:#222;font-size:10px}.rd-footer-links a{display:inline-flex;align-items:center;gap:5px;color:#666!important;font-size:10px;text-decoration:none;transition:color .18s,transform .18s}.rd-footer-links a:hover{color:#111!important;transform:translateX(2px)}
 .rd-footer-bottom{max-width:1240px;margin:auto;padding:18px 30px 22px;border-top:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;gap:15px;color:#888;font-size:9px}
 @media(max-width:700px){.rd-footer-main{grid-template-columns:1fr;gap:32px;padding:42px 22px 34px}.rd-footer-brand{max-width:420px}.rd-footer-links{gap:12px}.rd-footer-bottom{padding:16px 22px 20px;flex-wrap:wrap;justify-content:flex-start}.rd-footer-bottom span:nth-child(2){width:100%;order:2}}
+
+/* Landing hero alignment and section legibility */
+@media(min-width:901px){
+  .reaidy-page .rd-hero{text-align:left;padding-inline:clamp(32px,7vw,120px)}
+  .reaidy-page .rd-hero>.rd-audience{justify-content:flex-start}
+  .reaidy-page .rd-hero>.rd-eyebrow-pill{margin-left:0}
+  .reaidy-page .rd-hero>h1{max-width:980px;margin-left:0}
+  .reaidy-page .rd-hero>p{max-width:620px;margin-left:0;margin-right:0}
+  .reaidy-page .rd-hero>.opportunity-search{max-width:1050px;margin-left:0;margin-right:0}
+  .reaidy-page .rd-hero>.rd-counts{justify-content:flex-start;margin-left:0}
+}
+
+.reaidy-page .rd-audiences{color:#262626}
+.reaidy-page .rd-audiences>small{color:#666}
+.reaidy-page .rd-audiences .rd-audience-note{color:#454545}
+.reaidy-page .rd-audiences span{color:#333}
+.reaidy-page .rd-audience-counts span{color:#444;border-color:#dcdcdc;background:#fff}
+.reaidy-page .rd-title h2{color:#171717}
+.reaidy-page .rd-title p{color:#555}
+.reaidy-page .rd-feature-band .rd-band-heading h2{color:#fff}
+.reaidy-page .rd-feature-band .rd-band-heading p{color:#d0d0d0}
+.reaidy-page .rd-features{background:#f7f7f7;border-block:1px solid #e4e4e4}
+.reaidy-page .rd-features .rd-title h2,.reaidy-page .rd-testimonials .rd-title h2{color:#171717}
+.reaidy-page .rd-features .rd-title p,.reaidy-page .rd-testimonials .rd-title p{color:#555}
+.reaidy-page .rd-cards article{background:#fff;border-color:#dedede;box-shadow:0 8px 24px #00000008}
+.reaidy-page .rd-cards h3{color:#171717}
+.reaidy-page .rd-cards article>p{color:#555}
+.reaidy-page .rd-mini{background:#fafafa;border-color:#dedede;color:#222}
+.reaidy-page .rd-pricing-section{background:#fafafa;border-color:#dedede}
+.reaidy-page .rd-pricing-aside>p,.reaidy-page .rd-pricing-note{color:#555}
+.reaidy-page .rd-plan-card{border-color:#d9d9d9;box-shadow:0 8px 24px #00000008}
+.reaidy-page .rd-plan-card:not(.featured){color:#171717}
+.reaidy-page .rd-plan-card:not(.featured) .rd-plan-description,.reaidy-page .rd-plan-card:not(.featured) li{color:#555}
+.reaidy-page .rd-testimonials{background:#f1f2f3;border-block:1px solid #dedede}
 @media(max-width:430px){.rd-footer-links{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:26px}.rd-footer-links>div:last-child{grid-column:1/-1}.rd-footer-bottom{font-size:8px}}
 .rd-pricing-section{align-items:start}.rd-pricing-aside{padding-top:5px}.rd-pricing-aside>p{max-width:360px}.rd-pricing-note{padding-top:12px;border-top:1px solid #e9e9e9}.rd-plan-card{min-height:438px}.rd-plan-label{display:flex;align-items:center;min-height:22px;line-height:1.35}.rd-plan-card h3{min-height:28px}.rd-plan-description{min-height:42px}.rd-price{min-height:42px;white-space:nowrap}.rd-billing-caption{display:block;min-height:26px;padding-top:3px;line-height:1.4}
 .rd-footer-main{align-items:start!important}.rd-footer-links{align-items:start}.rd-footer-links>div{min-width:0;align-items:flex-start}.rd-footer-links>div>b{text-transform:uppercase;letter-spacing:.1em;font-size:9px}.rd-footer-bottom{display:grid!important;grid-template-columns:1fr auto;align-items:center}.rd-footer-bottom span:nth-child(2){text-align:right}
