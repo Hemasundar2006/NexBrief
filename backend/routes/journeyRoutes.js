@@ -8,7 +8,7 @@ import { rateLimit } from '../middleware/security.js';
 import { LeadModel, ProposalModel, WorkspaceModel, UserModel } from '../models/index.js';
 import { effectiveWorkspacePlan, plans } from '../config/plans.js';
 import { qualifyInquiry } from '../services/qualificationService.js';
-import {CaptureForm as Form,FollowSequence as Sequence,ProposalShare as Share,JourneySettings} from '../models/journey.js';
+import {CaptureForm as Form,FollowSequence as Sequence,ProposalShare as Share,JourneySettings,ServiceTemplate} from '../models/journey.js';
 import {queueMail,integrationStatus} from '../services/journeyService.js';
 
 const router=Router();
@@ -17,16 +17,17 @@ const roleServices={
  'web-developer':['Website development','Website redesign','Landing page','Portfolio website','Website refresh','E-commerce website'],
  'video-editor':['Video editing','Short-form video','YouTube editing','Podcast editing','Reels and social clips','Motion graphics'],
 };
-const allowedServices = role => roleServices[role] || null;
-const customAnswer=z.union([z.string().max(2000),z.boolean()]);
-const input=z.object({name:z.string().trim().min(2).max(120),email:z.string().trim().email().max(254).transform(v=>v.toLowerCase()),phone:z.string().max(40).default(''),deadline:z.string().date().optional().or(z.literal('')),company:z.string().trim().max(160).default(''),service:z.string().trim().min(2).max(160),value:z.number().nonnegative().max(10000000),notes:z.string().trim().min(20).max(10000),customFields:z.record(z.string().regex(/^field_[a-z0-9_-]+$/i),customAnswer).default({}),consent:z.literal(true),website:z.string().max(0).optional(),submissionId:z.string().uuid()});
-const customField=z.object({id:z.string().regex(/^field_[a-z0-9_-]+$/i).max(80),label:z.string().trim().min(2).max(80),type:z.enum(['text','email','phone','number','date','textarea','select','checkbox']),required:z.boolean().default(false),options:z.array(z.string().trim().min(1).max(80)).max(20).default([])}).superRefine((field,ctx)=>{if(field.type==='select'&&field.options.length<1)ctx.addIssue({code:'custom',message:'Dropdown fields need at least one option.',path:['options']});if(field.type!=='select'&&field.options.length)ctx.addIssue({code:'custom',message:'Only dropdown fields can have options.',path:['options']});});
+const allowedServices = role => role==='video-editor'?null:roleServices[role] || null;
+const customAnswer=z.union([z.string().max(2000),z.boolean(),z.array(z.string().max(80)).max(20)]);
+const input=z.object({name:z.string().trim().min(2).max(120),email:z.string().trim().email().max(254).transform(v=>v.toLowerCase()),phone:z.string().max(40).default(''),deadline:z.string().date().optional().or(z.literal('')),company:z.string().trim().max(160).default(''),service:z.string().trim().min(2).max(160),packageId:z.string().regex(/^[a-f\d]{24}$/i).optional(),value:z.number().nonnegative().max(10000000),notes:z.string().trim().min(20).max(10000),customFields:z.record(z.string().regex(/^field_[a-z0-9_-]+$/i),customAnswer).default({}),consent:z.literal(true),website:z.string().max(0).optional(),submissionId:z.string().uuid()});
+const customField=z.object({id:z.string().regex(/^field_[a-z0-9_-]+$/i).max(80),label:z.string().trim().min(2).max(80),type:z.enum(['text','email','phone','number','date','textarea','select','checkbox','url','radio','multiselect']),required:z.boolean().default(false),options:z.array(z.string().trim().min(1).max(80)).max(20).default([])}).superRefine((field,ctx)=>{if(['select','radio','multiselect'].includes(field.type)&&field.options.length<1)ctx.addIssue({code:'custom',message:'Choice fields need at least one option.',path:['options']});if(!['select','radio','multiselect'].includes(field.type)&&field.options.length)ctx.addIssue({code:'custom',message:'Only choice fields can have options.',path:['options']});});
 router.get('/public/forms/:token',rateLimit(60),wrap(async(req,res)=>{
  const form=await Form.findOne({token:req.params.token,enabled:true});
  if(!form)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
  const workspace=await WorkspaceModel.findById(form.workspaceId).select('name currency profession');
  const permitted=allowedServices(workspace?.profession);
- res.json({data:{name:workspace?.name,currency:workspace?.currency||'USD',title:form.title,description:form.description,services:permitted ? form.services.filter(service=>permitted.includes(service)) : form.services,customFields:form.customFields||[]}});
+ const packages=workspace?.profession==='video-editor'&&form.showPackages!==false?await ServiceTemplate.find({workspaceId:form.workspaceId,profession:'video-editor',active:true,publicVisible:true}).select('name description amount currency depositPercent timeline revisions deliverables includedFeatures featured billingType billingInterval').sort({featured:-1,createdAt:-1}).lean():[];
+ res.json({data:{name:workspace?.name,currency:workspace?.currency||'USD',title:form.title,description:form.description,services:permitted ? form.services.filter(service=>permitted.includes(service)) : form.services,customFields:form.customFields||[],showPackages:form.showPackages===true,packages}});
 }));
 router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
  const parsed=input.safeParse(req.body);
@@ -37,6 +38,7 @@ router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
  const owner=workspace&&await UserModel.findOne({_id:workspace.ownerId,status:'active',deletedAt:null});
  if(!owner)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
  const p=parsed.data;
+ if(p.packageId){const selected=await ServiceTemplate.findOne({_id:p.packageId,workspaceId:workspace._id,profession:'video-editor',active:true,publicVisible:true}).lean();if(!selected)return res.status(400).json({error:{message:'Choose an available package.'}});p.customFields={...(p.customFields||{}),_package:{id:String(selected._id),name:selected.name,amount:selected.amount,currency:selected.currency}};}
  const configured=form.customFields||[];
  const customFields={};
  for(const field of configured){const answer=p.customFields?.[field.id];if(field.required&&(answer===undefined||answer===null||answer===''||answer===false))return res.status(400).json({error:{message:`Please complete: ${field.label}.`}});if(answer!==undefined){if(field.type==='email'&&typeof answer==='string'&&!/^\S+@\S+\.\S+$/.test(answer))return res.status(400).json({error:{message:`Enter a valid email for ${field.label}.`}});if(field.type==='select'&&typeof answer==='string'&&!field.options.includes(answer))return res.status(400).json({error:{message:`Choose an available option for ${field.label}.`}});customFields[field.id]=answer;}}
@@ -48,7 +50,7 @@ router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
   lead=await LeadModel.findOne({workspaceId:workspace._id,captureId:p.submissionId}).session(session);if(lead)return;
   const count=await LeadModel.countDocuments({workspaceId:workspace._id,archivedAt:null}).session(session);
   if(count>=(plans[effectiveWorkspacePlan(workspace)]||plans.free).storedLeads)throw Object.assign(new Error('This form cannot accept more inquiries right now.'),{status:409});
-  [lead]=await LeadModel.create([{workspaceId:workspace._id,captureId:p.submissionId,name:p.name,email:p.email,phone:p.phone,deadline:p.deadline||undefined,company:p.company||p.name,service:p.service,value:p.value,currency:workspace.currency,notes:p.notes,customFields,contactConsentAt:new Date(),source:'Public inquiry form',qualification,qualificationScore:qualification.score,interest:qualification.interest,nextAction:qualification.nextAction,nextActionAt:new Date()}],{session});
+  [lead]=await LeadModel.create([{workspaceId:workspace._id,captureId:p.submissionId,name:p.name,email:p.email,phone:p.phone,deadline:p.deadline||undefined,company:p.company||p.name,service:p.service,value:p.value,currency:workspace.currency,notes:p.notes,customFields:{...customFields,...(p.customFields?._package?{selectedPackage:p.customFields._package}:{})},contactConsentAt:new Date(),source:'Public inquiry form',qualification,qualificationScore:qualification.score,interest:qualification.interest,nextAction:qualification.nextAction,nextActionAt:new Date()}],{session});
  });
  if(form.notify)await queueMail({workspaceId:workspace._id,key:`inquiry-${lead._id}`,to:owner.email,subject:'A new inquiry arrived in NexBrief',text:'A client submitted your inquiry form. Open your workspace to review it.',dueAt:new Date()});
  res.status(201).json({data:{received:true}});
@@ -73,6 +75,12 @@ router.post('/public/proposals/:token',rateLimit(10),wrap(async(req,res)=>{
  res.json({data:{received:true}});
 }));
 router.use('/journey',requireAuth,requirePermission('leads:write'));
+const videoFormInput=z.object({title:z.string().trim().min(2).max(120),description:z.string().max(1000),services:z.array(z.string().trim().min(2).max(160)).min(1).max(20),customFields:z.array(customField).max(20),enabled:z.boolean(),notify:z.boolean(),showPackages:z.boolean().default(false)}).superRefine((v,c)=>{if(new Set(v.customFields.map(f=>f.id)).size!==v.customFields.length)c.addIssue({code:'custom',message:'Each question must have its own identifier.'});});
+for(const action of ['draft','publish'])router.put('/journey/form/'+action,wrap(async(req,res)=>{
+ const workspace=await WorkspaceModel.findById(req.user.workspaceId).select('profession');if(workspace?.profession!=='video-editor')return res.sendStatus(403);
+ const value=videoFormInput.parse(req.body);const update=action==='draft'?{$set:{draft:value}}:{$set:value,$unset:{draft:1},$inc:{formVersion:1}};
+ const data=await Form.findOneAndUpdate({workspaceId:req.user.workspaceId},update,{new:true});if(!data)return res.sendStatus(404);res.json({data});
+}));
 router.get('/journey/sequences',wrap(async(req,res)=>res.json({data:await Sequence.find({workspaceId:req.user.workspaceId}).lean()})));
 router.post('/journey/sequences/:id',wrap(async(req,res)=>{
  if(!mongoose.isValidObjectId(req.params.id))return res.sendStatus(404);
@@ -102,15 +110,15 @@ router.post('/journey/proposals/:id/share',requirePermission('proposals:write'),
 router.get('/journey/form',wrap(async(req,res)=>{
  const workspace=await WorkspaceModel.findById(req.user.workspaceId).select('profession');
  const services=roleServices[workspace?.profession]||roleServices[req.user.serviceRole]||['Custom service','Creative consultation','Content production'];
- const data=await Form.findOneAndUpdate({workspaceId:req.user.workspaceId},{$setOnInsert:{token:randomBytes(24).toString('hex'),services}},{upsert:true,new:true});
- if (roleServices[workspace?.profession]) {
+ const data=await Form.findOneAndUpdate({workspaceId:req.user.workspaceId},{$setOnInsert:{token:randomBytes(24).toString('hex'),services,showPackages:workspace?.profession==='video-editor'}},{upsert:true,new:true});
+ if (workspace?.profession!=='video-editor'&&roleServices[workspace?.profession]) {
   const filtered=data.services.filter(service=>services.includes(service));
   if (filtered.length !== data.services.length || !filtered.length) { data.services=filtered.length ? filtered : services; await data.save(); }
  }
  res.json({data});
 }));
 router.patch('/journey/form',wrap(async(req,res)=>{
- const value=z.object({enabled:z.boolean().optional(),title:z.string().trim().min(2).max(120).optional(),description:z.string().max(1000).optional(),services:z.array(z.string().trim().min(2).max(160)).min(1).max(20).optional(),customFields:z.array(customField).max(20).optional(),notify:z.boolean().optional()}).parse(req.body);
+ const value=z.object({enabled:z.boolean().optional(),title:z.string().trim().min(2).max(120).optional(),description:z.string().max(1000).optional(),services:z.array(z.string().trim().min(2).max(160)).min(1).max(20).optional(),customFields:z.array(customField).max(20).optional(),showPackages:z.boolean().optional(),notify:z.boolean().optional()}).parse(req.body);
  if(value.customFields){const ids=value.customFields.map(field=>field.id);if(new Set(ids).size!==ids.length)return res.status(400).json({error:{message:'Each custom field needs a different ID.'}});}
  const workspace=await WorkspaceModel.findById(req.user.workspaceId).select('profession').lean();
  const permitted=allowedServices(workspace?.profession);
