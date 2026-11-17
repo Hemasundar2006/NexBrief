@@ -2,6 +2,7 @@ import {useState} from 'react';
 import {Film,Plus,Search,Eye,Copy,Archive,ArrowLeft} from 'lucide-react';
 import {api} from './api';
 import './video-packages.css';
+import './video-form.css';
 
 export default function VideoPackageLibrary({items=[],Editor,onRefresh,loading}) {
  const [draft,setDraft]=useState(null),[query,setQuery]=useState(''),[filter,setFilter]=useState('all'),[busy,setBusy]=useState(false),[error,setError]=useState(''),[preview,setPreview]=useState(null);

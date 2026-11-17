@@ -26,7 +26,7 @@ router.get('/public/forms/:token',rateLimit(60),wrap(async(req,res)=>{
  if(!form)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
  const workspace=await WorkspaceModel.findById(form.workspaceId).select('name currency profession');
  const permitted=allowedServices(workspace?.profession);
- const packages=workspace?.profession==='video-editor'&&form.showPackages!==false?await ServiceTemplate.find({workspaceId:form.workspaceId,profession:'video-editor',active:true,publicVisible:true}).select('name description amount currency depositPercent timeline revisions deliverables includedFeatures featured billingType billingInterval').sort({featured:-1,createdAt:-1}).lean():[];
+ const packages=workspace?.profession==='video-editor'&&form.showPackages!==false?await ServiceTemplate.find({workspaceId:form.workspaceId,profession:'video-editor',active:true,publicVisible:true}).select('name description amount currency depositPercent timeline revisions deliverables includedFeatures featured billingType billingInterval imageUrl terms').sort({featured:-1,createdAt:-1}).lean():[];
  res.json({data:{name:workspace?.name,currency:workspace?.currency||'USD',title:form.title,description:form.description,services:permitted ? form.services.filter(service=>permitted.includes(service)) : form.services,customFields:form.customFields||[],showPackages:form.showPackages===true,packages}});
 }));
 router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
@@ -38,10 +38,25 @@ router.post('/public/forms/:token',rateLimit(5),wrap(async(req,res)=>{
  const owner=workspace&&await UserModel.findOne({_id:workspace.ownerId,status:'active',deletedAt:null});
  if(!owner)return res.status(404).json({error:{message:'This inquiry form is unavailable.'}});
  const p=parsed.data;
- if(p.packageId){const selected=await ServiceTemplate.findOne({_id:p.packageId,workspaceId:workspace._id,profession:'video-editor',active:true,publicVisible:true}).lean();if(!selected)return res.status(400).json({error:{message:'Choose an available package.'}});p.customFields={...(p.customFields||{}),_package:{id:String(selected._id),name:selected.name,amount:selected.amount,currency:selected.currency}};}
+ if(p.packageId){if(!form.showPackages||workspace.profession!=='video-editor')return res.status(400).json({error:{message:'Package selection is unavailable.'}});const selected=await ServiceTemplate.findOne({_id:p.packageId,workspaceId:workspace._id,profession:'video-editor',active:true,publicVisible:true}).lean();if(!selected)return res.status(400).json({error:{message:'Choose an available package.'}});p.customFields={...(p.customFields||{}),_package:{id:String(selected._id),name:selected.name,amount:selected.amount,currency:selected.currency}};}
  const configured=form.customFields||[];
  const customFields={};
- for(const field of configured){const answer=p.customFields?.[field.id];if(field.required&&(answer===undefined||answer===null||answer===''||answer===false))return res.status(400).json({error:{message:`Please complete: ${field.label}.`}});if(answer!==undefined){if(field.type==='email'&&typeof answer==='string'&&!/^\S+@\S+\.\S+$/.test(answer))return res.status(400).json({error:{message:`Enter a valid email for ${field.label}.`}});if(field.type==='select'&&typeof answer==='string'&&!field.options.includes(answer))return res.status(400).json({error:{message:`Choose an available option for ${field.label}.`}});customFields[field.id]=answer;}}
+ for(const field of configured){
+  const answer=p.customFields?.[field.id],empty=answer===undefined||answer===null||answer===''||answer===false||(Array.isArray(answer)&&!answer.length);
+  if(field.required&&empty)return res.status(400).json({error:{message:`Please complete: ${field.label}.`}});
+  if(empty)continue;
+  let valid=true;
+  if(field.type==='multiselect')valid=Array.isArray(answer)&&answer.every(v=>field.options.includes(v));
+  else if(field.type==='checkbox')valid=typeof answer==='boolean';
+  else {valid=typeof answer==='string';if(valid&&['select','radio'].includes(field.type))valid=field.options.includes(answer);
+   if(valid&&field.type==='email')valid=z.string().email().safeParse(answer).success;
+   if(valid&&field.type==='url'){try{valid=['http:','https:'].includes(new URL(answer).protocol);}catch{valid=false;}}
+   if(valid&&field.type==='number')valid=Number.isFinite(Number(answer));
+   if(valid&&field.type==='date')valid=z.string().date().safeParse(answer).success;
+  }
+  if(!valid)return res.status(400).json({error:{message:`Check your answer for ${field.label}.`}});
+  customFields[field.id]=answer;
+ }
  const qualification=qualifyInquiry({...p,customFields});
  if(!form.services.includes(p.service) || (allowedServices(workspace.profession) && !allowedServices(workspace.profession).includes(p.service)))return res.status(400).json({error:{message:'Choose an available service.'}});
  let lead;
